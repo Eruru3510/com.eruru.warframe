@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "com.eruru.warframe", "com.eruru.warframe\com.eruru.warframe.csproj", "{3AEF4C84-82F7-410D-943F-D3EB2BEFEE9E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{74D174DC-3893-4E6F-9C8C-F663DE677CB4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3AEF4C84-82F7-410D-943F-D3EB2BEFEE9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AEF4C84-82F7-410D-943F-D3EB2BEFEE9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AEF4C84-82F7-410D-943F-D3EB2BEFEE9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AEF4C84-82F7-410D-943F-D3EB2BEFEE9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74D174DC-3893-4E6F-9C8C-F663DE677CB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74D174DC-3893-4E6F-9C8C-F663DE677CB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74D174DC-3893-4E6F-9C8C-F663DE677CB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74D174DC-3893-4E6F-9C8C-F663DE677CB4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2742EDBC-E493-4AE7-B032-D1D7C975AE1A}
+	EndGlobalSection
+EndGlobal

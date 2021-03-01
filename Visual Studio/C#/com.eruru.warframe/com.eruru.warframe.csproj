@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{3AEF4C84-82F7-410D-943F-D3EB2BEFEE9E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>com.eruru.warframe</RootNamespace>
+    <AssemblyName>com.eruru.warframe</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Eruru.Html, Version=1.0.0.7, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.Html.1.0.0.7\lib\net45\Eruru.Html.dll</HintPath>
+    </Reference>
+    <Reference Include="Eruru.Http, Version=1.0.0.6, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.Http.1.0.0.6\lib\net45\Eruru.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="Eruru.Json, Version=1.0.0.10, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.Json.1.0.0.10\lib\net45\Eruru.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Eruru.QQMini.PluginSDKHelper, Version=1.0.0.2, Culture=neutral, processorArchitecture=x86">
+      <HintPath>..\packages\Eruru.QQMini.PluginSDKHelper.1.0.0.2\lib\net45\Eruru.QQMini.PluginSDKHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="Eruru.ReaderWriterLockHelper, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.ReaderWriterLockHelper.1.0.0.1\lib\net45\Eruru.ReaderWriterLockHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="Eruru.TextCommand">
+      <HintPath>..\..\..\..\Eruru.TextCommand\Visual Studio\C#\Eruru.TextCommand\bin\Release\net20\Eruru.TextCommand.dll</HintPath>
+    </Reference>
+    <Reference Include="Eruru.TextTokenizer, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.TextTokenizer.1.0.0.1\lib\net20\Eruru.TextTokenizer.dll</HintPath>
+    </Reference>
+    <Reference Include="Eruru.Timer, Version=1.0.0.3, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.Timer.1.0.0.3\lib\net45\Eruru.Timer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="QQMini.PluginFramework.Utility, Version=1.1.1.1006, Culture=neutral, processorArchitecture=x86">
+      <HintPath>..\packages\QQMini.PluginFramework.Utility.1.1.1.1006\lib\net45\QQMini.PluginFramework.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="QQMini.PluginInterface, Version=1.0.5.1119, Culture=neutral, processorArchitecture=x86">
+      <HintPath>..\packages\QQMini.PluginInterface.1.0.5.1119\lib\net45\QQMini.PluginInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="QQMini.PluginSDK, Version=1.0.11.1021, Culture=neutral, processorArchitecture=x86">
+      <HintPath>..\packages\QQMini.PluginSDK.1.0.11.1021-Beta\lib\net45\QQMini.PluginSDK.dll</HintPath>
+    </Reference>
+    <Reference Include="QQMini.PluginSDK.Core, Version=1.0.20.1202, Culture=neutral, processorArchitecture=x86">
+      <HintPath>..\packages\QQMini.PluginSDK.Core.1.0.20.1202-Beta\lib\net45\QQMini.PluginSDK.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Api.cs" />
+    <Compile Include="Catch Message System\CatchMessageSystem.cs" />
+    <Compile Include="Commands.cs" />
+    <Compile Include="Config.cs" />
+    <Compile Include="Converters\BountyItemArrayTranslator.cs" />
+    <Compile Include="Converters\FissureSorter.cs" />
+    <Compile Include="Converters\InvasionCompletionRound.cs" />
+    <Compile Include="Converters\ItemArrayTranslator.cs" />
+    <Compile Include="Converters\ItemTranslator.cs" />
+    <Compile Include="Converters\NewsReverser.cs" />
+    <Compile Include="Converters\NodeTranslator.cs" />
+    <Compile Include="Converters\RelativeTimeConverter.cs" />
+    <Compile Include="Converters\RewardTranslator.cs" />
+    <Compile Include="Converters\WarframeStatusUpdater.cs" />
+    <Compile Include="Localizer\ILocalizerConverter.cs" />
+    <Compile Include="Localizer\Localizer.cs" />
+    <Compile Include="Localizer\LocalizerConverter.cs" />
+    <Compile Include="Localizer\LocalizerField.cs" />
+    <Compile Include="MessagePermissionLevel.cs" />
+    <Compile Include="Notice System\Notice.cs" />
+    <Compile Include="Notice System\NoticeSystem.cs" />
+    <Compile Include="Paths.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Translate System\Translate.cs" />
+    <Compile Include="Translate System\TranslateSearchType.cs" />
+    <Compile Include="Translate System\TranslateSystem.cs" />
+    <Compile Include="Warframe Market\WarframeMarket.cs" />
+    <Compile Include="Warframe Market\WarframeMarketInclude.cs" />
+    <Compile Include="Warframe Market\WarframeMarketIncludeItem.cs" />
+    <Compile Include="Warframe Market\WarframeMarketItem.cs" />
+    <Compile Include="Warframe Market\WarframeMarketItemPage.cs" />
+    <Compile Include="Warframe Market\WarframeMarketItemsInSet.cs" />
+    <Compile Include="Warframe Market\WarframeMarketOrder.cs" />
+    <Compile Include="Warframe Market\WarframeMarketOrderType.cs" />
+    <Compile Include="Warframe Market\WarframeMarketPayload.cs" />
+    <Compile Include="Warframe Market\WarframeMarketUser.cs" />
+    <Compile Include="Warframe Market\WarframeMarketUserStatus.cs" />
+    <Compile Include="Warframe Status\WarframeStatus.cs" />
+    <Compile Include="Warframe Status\WarframeStatusActiveChallenge.cs" />
+    <Compile Include="Warframe Status\WarframeStatusAlert.cs" />
+    <Compile Include="Warframe Status\WarframeStatusArbitration.cs" />
+    <Compile Include="Warframe Status\WarframeStatusCycle.cs" />
+    <Compile Include="Warframe Status\WarframeStatusDailyDeal.cs" />
+    <Compile Include="Warframe Status\WarframeStatusEvent.cs" />
+    <Compile Include="Warframe Status\WarframeStatusFissure.cs" />
+    <Compile Include="Warframe Status\WarframeStatusInvasion.cs" />
+    <Compile Include="Warframe Status\WarframeStatusInventory.cs" />
+    <Compile Include="Warframe Status\WarframeStatusJob.cs" />
+    <Compile Include="Warframe Status\WarframeStatusMission.cs" />
+    <Compile Include="Warframe Status\WarframeStatusNews.cs" />
+    <Compile Include="Warframe Status\WarframeStatusNightwave.cs" />
+    <Compile Include="Warframe Status\WarframeStatusReward.cs" />
+    <Compile Include="Warframe Status\WarframeStatusSortie.cs" />
+    <Compile Include="Warframe Status\WarframeStatusSyndicateMission.cs" />
+    <Compile Include="Warframe Status\WarframeStatusVoidTrader.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\QQMini.PluginSDK.1.0.11.1021-Beta\build\QQMini.PluginSDK.targets" Condition="Exists('..\packages\QQMini.PluginSDK.1.0.11.1021-Beta\build\QQMini.PluginSDK.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>这台计算机上缺少此项目引用的 NuGet 程序包。使用“NuGet 程序包还原”可下载这些程序包。有关更多信息，请参见 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的文件是 {0}。</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\QQMini.PluginSDK.1.0.11.1021-Beta\build\QQMini.PluginSDK.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QQMini.PluginSDK.1.0.11.1021-Beta\build\QQMini.PluginSDK.targets'))" />
+  </Target>
+</Project>
