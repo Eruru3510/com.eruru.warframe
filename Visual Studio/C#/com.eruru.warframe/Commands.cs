@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Eruru.Html;
 using Eruru.Http;
@@ -54,15 +55,15 @@ namespace com.eruru.warframe {
 				message.Reply ($"群号\"{group}\"无效");
 				return;
 			}
-			Config.Read (config => {
-				if (!config.Groups.Contains (group)) {
-					Config.Write (config1 => {
-						config.Groups.Add (group);
-					});
-					message.Reply ($"添加群\"{group}\"成功");
+			Config.Read ((ref Config config) => {
+				if (config.Groups.Contains (group)) {
+					message.Reply ($"群\"{group}\"已存在");
 					return;
 				}
-				message.Reply ($"群\"{group}\"已存在");
+				Config.Write ((ref Config subConfig) => {
+					subConfig.Groups.Add (group);
+				});
+				message.Reply ($"添加群\"{group}\"成功");
 			});
 		}
 
@@ -75,7 +76,7 @@ namespace com.eruru.warframe {
 				message.Reply ($"群号\"{group}\"无效");
 				return;
 			}
-			Config.Write (config => {
+			Config.Write ((ref Config config) => {
 				if (config.Groups.Remove (group)) {
 					message.Reply ($"移除群\"{group}\"成功");
 					return;
@@ -93,15 +94,15 @@ namespace com.eruru.warframe {
 				message.Reply ($"群号\"{group}\"无效");
 				return;
 			}
-			Config.Read (config => {
-				if (!config.RelayGroups.Contains (group)) {
-					Config.Write (config1 => {
-						config.RelayGroups.Add (group);
-					});
-					message.Reply ($"添加通知群\"{group}\"成功");
+			Config.Read ((ref Config config) => {
+				if (config.RelayGroups.Contains (group)) {
+					message.Reply ($"通知群\"{group}\"已存在");
 					return;
 				}
-				message.Reply ($"通知群\"{group}\"已存在");
+				Config.Write ((ref Config subConfig) => {
+					subConfig.RelayGroups.Add (group);
+				});
+				message.Reply ($"添加通知群\"{group}\"成功");
 			});
 		}
 
@@ -114,7 +115,7 @@ namespace com.eruru.warframe {
 				message.Reply ($"群号\"{group}\"无效");
 				return;
 			}
-			Config.Write (config => {
+			Config.Write ((ref Config config) => {
 				if (config.RelayGroups.Remove (group)) {
 					message.Reply ($"移除通知群\"{group}\"成功");
 					return;
@@ -124,7 +125,8 @@ namespace com.eruru.warframe {
 		}
 
 		public static void AddTranslate (QMMessage<MessagePermissionLevel> message, string key, string value) {
-			Config.Write (config => {
+			message.Reply ($"开始添加翻译\"{key}\" = \"{value}\"");
+			Config.Write ((ref Config config) => {
 				config.Translates[key] = value;
 			});
 			TranslateSystem.Add (key, value);
@@ -132,10 +134,10 @@ namespace com.eruru.warframe {
 		}
 
 		public static void RemoveTranslate (QMMessage<MessagePermissionLevel> message, string key) {
-			Config.Read (config => {
+			Config.Read ((ref Config config) => {
 				if (config.Translates.TryGetValue (key, out string value)) {
-					Config.Write (config1 => {
-						config.Translates.Remove (key);
+					Config.Write ((ref Config subConfig) => {
+						subConfig.Translates.Remove (key);
 					});
 					TranslateSystem.Remove (key);
 					message.Reply ($"删除翻译\"{key}\"=\"{value}\"成功");
@@ -145,10 +147,33 @@ namespace com.eruru.warframe {
 			});
 		}
 
+		public static void AddWarframeMarketTranslate (QMMessage<MessagePermissionLevel> message, string key, string value) {
+			message.Reply ($"开始添加WM翻译\"{key}\" = \"{value}\"");
+			Config.Write ((ref Config config) => {
+				config.WarframeMarketTranslates[key] = value;
+			});
+			warframe.WarframeMarket.Add (key, value);
+			message.Reply ($"添加WM翻译\"{key}\" = \"{value}\"成功");
+		}
+
+		public static void RemoveWarframeMarketTranslate (QMMessage<MessagePermissionLevel> message, string key) {
+			Config.Read ((ref Config config) => {
+				if (config.WarframeMarketTranslates.TryGetValue (key, out string value)) {
+					Config.Write ((ref Config subConfig) => {
+						subConfig.WarframeMarketTranslates.Remove (key);
+					});
+					warframe.WarframeMarket.Remove (key);
+					message.Reply ($"删除WM翻译\"{key}\"=\"{value}\"成功");
+					return;
+				}
+				message.Reply ($"WM翻译键\"{key}\"不存在");
+			});
+		}
+
 		public static void Translate (QMMessage<MessagePermissionLevel> message, params string[] arguments) {
 			string keyword = string.Join (" ", arguments);
 			List<Translate> translates = TranslateSystem.Search (keyword);
-			Config.Read (config => {
+			Config.Read ((ref Config config) => {
 				CommandHeader header = new CommandHeader () {
 					Keyword = keyword,
 					MaxResultNumber = config.TranslateMaxResultNumber
@@ -160,15 +185,16 @@ namespace com.eruru.warframe {
 				translates.Sort ();
 				StringBuilder stringBuilder = new StringBuilder ();
 				CommandItem item = new CommandItem ();
+				object[] items = new object[] { item };
 				int i = 0;
 				WarframeStatus.GetInformation (
 					stringBuilder,
 					config.Commands.Translate[CommandIndexName.Default].Header, new object[] { header },
-					config.Commands.Translate[CommandIndexName.Default].Item, translates, translate => i < config.TranslateMaxResultNumber, translate => {
+					config.Commands.Translate[CommandIndexName.Default].Item, translates, translate => i < header.MaxResultNumber, translate => {
 						item.Key = translate.Key;
 						item.Value = translate.Value;
 						i++;
-						return new object[] { item };
+						return items;
 					},
 					config.Commands.Translate[CommandIndexName.Default].Footer, new object[] { header }
 				);
@@ -191,18 +217,48 @@ namespace com.eruru.warframe {
 					startIndex = 1;
 					break;
 			}
-			string keyword = string.Join (" ", arguments, startIndex, arguments.Length - startIndex);
-			CatchMessageSystem.Clear (message);
+			int parameterCount = startIndex;
+			CommandHeader header = new CommandHeader () {
+				OrderType = orderType == WarframeMarketOrderType.Sell ? "卖家" : "买家",
+				ChatOrderType = orderType == WarframeMarketOrderType.Sell ? "buy" : "sell",
+			};
+			if (arguments.Length >= 2 && int.TryParse (arguments[arguments.Length - 1], out int modRank)) {
+				parameterCount++;
+				header.PreSelectedMod = modRank;
+			}
+			string keyword = string.Join (" ", arguments, startIndex, arguments.Length - parameterCount);
+			keyword = Regex.Replace (keyword, @"[A-Za-z]+", match => Api.Equals (match.Value, "P") ? "Prime" : match.Value);
+			header.Keyword = keyword;
+			CatchMessageSystem.RemoveAll (message);
 			List<WarframeMarketItem> items = warframe.WarframeMarket.Search (keyword);
-			Config.Read (config => {
-				CommandHeader header = new CommandHeader () {
-					Keyword = keyword,
-					MaxResultNumber = config.TranslateMaxResultNumber,
-					OrderType = orderType == WarframeMarketOrderType.Sell ? "卖家" : "买家",
-					ResultNumber = items.Count
-				};
+			CommandItem commandItem = new CommandItem ();
+			object[] commandItems = new object[] { commandItem };
+			header.ResultNumber = items.Count;
+			Config.Read ((ref Config config) => {
+				header.MaxResultNumber = config.WarframeMarketMaxResultNumber;
 				if (items.Count == 0) {
 					message.Reply (Localizer.Execute (config.Commands.WarframeMarket[CommandIndexName.NoResult].Header, header));
+					CatchMessageSystem.Add (message, receivedMessage => {
+						if (receivedMessage.Text.StartsWith ("绑定")) {
+							string bindKeyword = receivedMessage.Text.Substring (3);
+							header.Keyword = bindKeyword;
+							items = warframe.WarframeMarket.Search (bindKeyword);
+							if (items.Count == 0) {
+								return false;
+							}
+							if (items.Count == 1) {
+								AddWarframeMarketTranslate (receivedMessage, keyword, items[0].ItemName);
+								return true;
+							}
+							items.Sort ();
+							Config.Read ((ref Config subConfig) => {
+								message.Reply (GetSelectItemInformation (subConfig));
+							});
+							CatchSelectItem (item => AddWarframeMarketTranslate (receivedMessage, keyword, item.ItemName));
+							return true;
+						}
+						return false;
+					});
 					return;
 				}
 				if (items.Count == 1) {
@@ -210,62 +266,76 @@ namespace com.eruru.warframe {
 					return;
 				}
 				items.Sort ();
-				StringBuilder stringBuilder = new StringBuilder ();
-				CommandItem commandItem = new CommandItem ();
+				message.Reply (GetSelectItemInformation (config));
+				CatchSelectItem (item => WarframeMarketSelectedItem (message, header, item, orderType));
+			});
+			void CatchSelectItem (Action<WarframeMarketItem> action) {
+				CatchMessageSystem.Add (message, receivedMessage => {
+					if (int.TryParse (receivedMessage, out int orderNumber)) {
+						if (orderNumber > 0 && orderNumber <= items.Count) {
+							action (items[orderNumber - 1]);
+							return true;
+						}
+						Config.Read ((ref Config subConfig) => {
+							receivedMessage.Reply (Localizer.Execute (subConfig.Commands.WarframeMarket[CommandIndexName.ItemOrderNumberError].Header, header));
+						});
+					}
+					return false;
+				});
+			}
+			StringBuilder GetSelectItemInformation (Config subConfig) {
 				int i = 0;
-				WarframeStatus.GetInformation (
-					stringBuilder,
-					config.Commands.WarframeMarket[CommandIndexName.Default].Header, new object[] { header },
-					config.Commands.WarframeMarket[CommandIndexName.Default].Item, items, item => i < config.WarframeMarketMaxResultNumber, item => {
+				return WarframeStatus.GetInformation (
+					null,
+					subConfig.Commands.WarframeMarket[CommandIndexName.Default].Header, new object[] { header },
+					subConfig.Commands.WarframeMarket[CommandIndexName.Default].Item, items, item => i < subConfig.WarframeMarketMaxResultNumber, item => {
 						commandItem.OrderNumber = i + 1;
 						commandItem.Name = item.Name;
 						commandItem.ItemName = item.ItemName;
 						i++;
-						return new object[] { commandItem };
+						return commandItems;
 					},
-					config.Commands.WarframeMarket[CommandIndexName.Default].Footer, new object[] { header }
+					subConfig.Commands.WarframeMarket[CommandIndexName.Default].Footer, new object[] { header }
 				);
-				message.Reply (stringBuilder);
-				CatchMessageSystem.Add (message, receivedMessage => {
-					if (int.TryParse (receivedMessage, out int orderNumber)) {
-						if (orderNumber > 0 && orderNumber <= items.Count) {
-							Task.Run (() => {
-								WarframeMarketSelectedItem (receivedMessage, header, items[orderNumber - 1], orderType);
-							});
-							return true;
-						}
-						receivedMessage.Reply (Localizer.Execute (config.Commands.WarframeMarket[CommandIndexName.ItemOrderNumberError].Header, header));
-					}
-					return false;
-				});
-			});
+			}
 		}
 		static void WarframeMarketSelectedItem (QMMessage<MessagePermissionLevel> message, CommandHeader header, WarframeMarketItem item, WarframeMarketOrderType orderType) {
-			Config.Read (config => {
-				message.Reply (Localizer.Execute (config.Commands.WarframeMarket[CommandIndexName.StartQuery].Header, header, item));
-			});
-			Http http = new Http ();
-			HttpRequestInformation httpRequestInformation = new HttpRequestInformation ();
-			string html = http.Request ($@"https://warframe.market/items/{item.UrlName}", httpRequestInformation);
-			HtmlDocument htmlDocument = HtmlDocument.Parse (html);
-			string json = warframe.WarframeMarket.GetJson (htmlDocument);
-			WarframeMarketItemPage itemPage = JsonConvert.Deserialize<WarframeMarketItemPage> (json);
-			header.MaxModRank = itemPage.Include.Item.ItemsInSet[0].ModMaxRank;
-			if (header.MaxModRank == 0) {
-				WarframeMarketSelectedModRank (message, header, item, orderType, itemPage, header.MaxModRank);
-				return;
-			}
-			Config.Read (config => {
-				message.Reply (Localizer.Execute (config.Commands.WarframeMarket[CommandIndexName.ModRankError].Header, header, item));
-				CatchMessageSystem.Add (message, receivedMessage => {
-					if (int.TryParse (receivedMessage, out int modRank)) {
-						if (modRank >= 0 && modRank <= header.MaxModRank) {
-							WarframeMarketSelectedModRank (message, header, item, orderType, itemPage, modRank);
-							return true;
-						}
-						receivedMessage.Reply (Localizer.Execute (config.Commands.WarframeMarket[CommandIndexName.ModRankError].Header, header, item));
+			Task.Run (() => {
+				Config.Read ((ref Config config) => {
+					message.Reply (Localizer.Execute (config.Commands.WarframeMarket[CommandIndexName.StartQuery].Header, header, item));
+				});
+				Http http = new Http ();
+				HttpRequestInformation httpRequestInformation = new HttpRequestInformation ();
+				string html = http.Request ($@"https://warframe.market/items/{item.UrlName}", httpRequestInformation);
+				HtmlDocument htmlDocument = HtmlDocument.Parse (html);
+				string json = warframe.WarframeMarket.GetJson (htmlDocument);
+				WarframeMarketItemPage itemPage = JsonConvert.Deserialize<WarframeMarketItemPage> (json);
+				header.MaxModRank = itemPage.Include.Item.ItemsInSet[0].ModMaxRank;
+				if (header.MaxModRank == 0) {
+					WarframeMarketSelectedModRank (message, header, item, orderType, itemPage, header.MaxModRank);
+					return;
+				}
+				if (header.PreSelectedMod >= 0) {
+					if (header.PreSelectedMod > header.MaxModRank) {
+						header.PreSelectedMod = header.MaxModRank;
 					}
-					return false;
+					WarframeMarketSelectedModRank (message, header, item, orderType, itemPage, header.PreSelectedMod);
+					return;
+				}
+				Config.Read ((ref Config config) => {
+					message.Reply (Localizer.Execute (config.Commands.WarframeMarket[CommandIndexName.ModRankError].Header, header, item));
+					CatchMessageSystem.Add (message, receivedMessage => {
+						if (int.TryParse (receivedMessage, out int modRank)) {
+							if (modRank >= 0 && modRank <= header.MaxModRank) {
+								WarframeMarketSelectedModRank (message, header, item, orderType, itemPage, modRank);
+								return true;
+							}
+							Config.Read ((ref Config subConfig) => {
+								receivedMessage.Reply (Localizer.Execute (subConfig.Commands.WarframeMarket[CommandIndexName.ModRankError].Header, header, item));
+							});
+						}
+						return false;
+					});
 				});
 			});
 		}
@@ -278,7 +348,7 @@ namespace com.eruru.warframe {
 				}
 			}
 			header.ResultNumber = orders.Count;
-			Config.Read (config => {
+			Config.Read ((ref Config config) => {
 				if (orders.Count == 0) {
 					if (header.MaxModRank == 0) {
 						message.Reply (Localizer.Execute (config.Commands.WarframeMarket[CommandIndexName.NoQueryResult].Header, header, item));
@@ -298,17 +368,18 @@ namespace com.eruru.warframe {
 				string headerIndexName = header.MaxModRank == 0 ? CommandIndexName.QueryResult : CommandIndexName.QueryResultByModRank;
 				int i = 0;
 				CommandItem commandItem = new CommandItem ();
+				object[] commandItems = new object[] { commandItem };
 				WarframeStatus.GetInformation (
 					stringBuilder,
 					config.Commands.WarframeMarket[headerIndexName].Header, new object[] { header, item },
-					config.Commands.WarframeMarket[headerIndexName].Item, orders, order => i < config.WarframeMarketMaxResultNumber, order => {
+					config.Commands.WarframeMarket[headerIndexName].Item, orders, order => i < header.MaxResultNumber, order => {
 						commandItem.OrderNumber = i + 1;
 						commandItem.Platinum = order.Platinum;
 						commandItem.Status = GetStatusText (order.User.Status);
 						commandItem.Quantity = order.Quantity;
 						commandItem.InGameName = order.User.InGameName;
 						i++;
-						return new object[] { commandItem };
+						return commandItems;
 					},
 					config.Commands.WarframeMarket[headerIndexName].Footer, new object[] { header, item }
 				);
@@ -319,7 +390,9 @@ namespace com.eruru.warframe {
 							WarframeMarketSelectedOrder (receivedMessage, header, item, orders[orderNumber - 1]);
 							return false;
 						}
-						receivedMessage.Reply (Localizer.Execute (config.Commands.WarframeMarket[CommandIndexName.PrivateChatOrderNumberError].Header, header, item));
+						Config.Read ((ref Config subConfig) => {
+							receivedMessage.Reply (Localizer.Execute (subConfig.Commands.WarframeMarket[CommandIndexName.PrivateChatOrderNumberError].Header, header, item));
+						});
 					}
 					return false;
 				});
@@ -338,13 +411,104 @@ namespace com.eruru.warframe {
 			}
 		}
 		static void WarframeMarketSelectedOrder (QMMessage<MessagePermissionLevel> message, CommandHeader header, WarframeMarketItem item, WarframeMarketOrder order) {
-			Config.Read (config => {
+			Config.Read ((ref Config config) => {
 				if (header.MaxModRank == 0) {
 					message.Reply (Localizer.Execute (config.Commands.WarframeMarket[CommandIndexName.PrivateChatText].Header, header, item, order, order.User));
 					return;
 				}
 				message.Reply (Localizer.Execute (config.Commands.WarframeMarket[CommandIndexName.PrivateChatTextByModRank].Header, header, item, order, order.User));
 			});
+		}
+
+		public static void Wiki (QMMessage<MessagePermissionLevel> message, params string[] args) {
+			string keyword = string.Join (" ", args);
+			CommandHeader header = new CommandHeader () {
+				Keyword = keyword
+			};
+			Config.Read ((ref Config config) => {
+				message.Reply (Localizer.Execute (config.Commands.Wiki[CommandIndexName.StartQuery].Header, header));
+			});
+			CatchMessageSystem.RemoveAll (message);
+			Http http = new Http ();
+			HttpRequestInformation httpRequestInformation = new HttpRequestInformation () {
+				Url = "https://warframe.huijiwiki.com/index.php",
+				QueryStringParameters = {
+					{ "search", HttpApi.UrlEncode (keyword) },
+					{ "title",  "Special:Search" }
+				}
+			};
+			HtmlDocument htmlDocument = HtmlDocument.Parse (http.Request (httpRequestInformation));
+			List<HtmlElement> lis = htmlDocument.QuerySelectorAll (".mw-search-results li");
+			if (lis.Count == 0) {
+				Wiki (message, keyword, $"https://warframe.huijiwiki.com/wiki/{HttpApi.UrlEncode (keyword)}", htmlDocument);
+				return;
+			}
+			List<WikiResult> results = new List<WikiResult> (lis.Count);
+			foreach (HtmlElement li in lis) {
+				HtmlElement a = li.QuerySelector (".mw-search-result-heading a");
+				string title = a.GetAttribute ("title");
+				if (title is null) {
+					continue;
+				}
+				if (title.Contains (keyword)) {
+					results.Add (new WikiResult (
+						title,
+						$"https://warframe.huijiwiki.com{a.GetAttribute ("href")}",
+						li.GetElementByClassName ("searchresult").TextContent)
+					);
+				}
+			}
+			if (results.Count == 0) {
+				Config.Read ((ref Config config) => {
+					message.Reply (Localizer.Execute (config.Commands.Wiki[CommandIndexName.NoResult].Header, header));
+				});
+				return;
+			}
+			header.ResultNumber = results.Count;
+			StringBuilder stringBuilder = new StringBuilder ();
+			CommandItem commandItem = new CommandItem ();
+			object[] commandItems = new object[] { commandItem };
+			Config.Read ((ref Config config) => {
+				int i = 0;
+				header.MaxResultNumber = config.WikiMaxResultNumber;
+				WarframeStatus.GetInformation (stringBuilder,
+					config.Commands.Wiki[CommandIndexName.Default].Header, new object[] { header },
+					config.Commands.Wiki[CommandIndexName.Default].Item, results, item => i < header.MaxResultNumber, item => {
+						commandItem.OrderNumber = i + 1;
+						commandItem.Title = item.Title;
+						commandItem.Url = item.Url;
+						commandItem.Description = item.Description;
+						i++;
+						return commandItems;
+					},
+					config.Commands.Wiki[CommandIndexName.Default].Footer, new object[] { header }
+				);
+			});
+			message.Reply (stringBuilder);
+			CatchMessageSystem.Add (message, receivedMessage => {
+				if (int.TryParse (receivedMessage.Text, out int i)) {
+					if (i >= 1 && i <= results.Count) {
+						WikiResult wikiResult = results[i - 1];
+						header.Keyword = wikiResult.Title;
+						Config.Read ((ref Config config) => {
+							message.Reply (Localizer.Execute (config.Commands.Wiki[CommandIndexName.StartQuery].Header, header));
+						});
+						Wiki (message, wikiResult.Title, wikiResult.Url, HtmlDocument.Parse (new Http ().Request (wikiResult.Url)));
+					} else {
+						Config.Read ((ref Config config) => {
+							message.Reply (Localizer.Execute (config.Commands.Wiki[CommandIndexName.OrderNumberError].Header, header));
+						});
+					}
+				}
+				return false;
+			});
+		}
+		static void Wiki (QMMessage<MessagePermissionLevel> message, string title, string url, HtmlDocument htmlDocument) {
+			StringBuilder stringBuilder = new StringBuilder ();
+			stringBuilder.AppendLine ($"Wiki {title}");
+			stringBuilder.AppendLine (url);
+			stringBuilder.Append (htmlDocument.QuerySelector (".mw-parser-output > p")?.TextContent);
+			message.Reply (stringBuilder);
 		}
 
 		public static void News (QMMessage<MessagePermissionLevel> message) {
@@ -448,6 +612,8 @@ namespace com.eruru.warframe {
 		public int MaxModRank;
 		public int MaxResultNumber;
 		public string OrderType;
+		public string ChatOrderType;
+		public int PreSelectedMod = -1;
 		public int ResultNumber;
 
 	}
@@ -463,6 +629,9 @@ namespace com.eruru.warframe {
 		public string Status;
 		public int Quantity;
 		public string InGameName;
+		public string Title;
+		public string Url;
+		public string Description;
 
 	}
 

@@ -12,8 +12,7 @@ namespace com.eruru.warframe {
 		public static double MaximumInterval { get; set; } = Api.MinutesToMilliseconds (90);
 
 		static readonly Random Random = new Random ();
-		static readonly List<Notice> Notices = new List<Notice> ();
-		static readonly ReaderWriterLockHelper ReaderWriterLockHelper = new ReaderWriterLockHelper ();
+		static readonly ReaderWriterLockHelper<List<Notice>> ReaderWriterLockHelper = new ReaderWriterLockHelper<List<Notice>> (new List<Notice> ());
 
 		public static bool CanNotice () {
 			return DateTime.Now.Hour >= StartTime && DateTime.Now.Hour < EndTime;
@@ -30,8 +29,8 @@ namespace com.eruru.warframe {
 			if (action is null) {
 				throw new ArgumentNullException (nameof (action));
 			}
-			ReaderWriterLockHelper.Write (() => {
-				Notices.Add (new Notice (id, action));
+			ReaderWriterLockHelper.Write ((ref List<Notice> notices) => {
+				notices.Add (new Notice (id, action));
 			});
 		}
 

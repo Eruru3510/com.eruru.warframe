@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using Eruru.QQMini.PluginSDKHelper;
 using Eruru.TextCommand;
 using QQMini.PluginSDK.Core;
@@ -108,8 +107,12 @@ namespace com.eruru.warframe {
 					"山谷",
 					"奥布山谷"
 				}, MessagePermissionLevel.Friend, nameof (Commands.Vallis));
+				TextCommandSystem.Add<Commands> (nameof (Commands.Wiki), new string[] {
+					"Wiki",
+					"维基"
+				}, "<关键字>", MessagePermissionLevel.Friend, nameof (Commands.Wiki));
 				TextCommandSystem.Add<Commands> (nameof (Commands.Translate), "翻译", "<关键字>", MessagePermissionLevel.Friend, nameof (Commands.Translate));
-				TextCommandSystem.Add<Commands> (nameof (Commands.WarframeMarket), "WM", "[卖家|买家|买|卖] <关键字>", MessagePermissionLevel.Friend, nameof (Commands.WarframeMarket));
+				TextCommandSystem.Add<Commands> (nameof (Commands.WarframeMarket), "WM", "[卖家|买家|买|卖] <关键字> [MOD等级]", MessagePermissionLevel.Friend, nameof (Commands.WarframeMarket));
 				TextCommandSystem.Add<Commands> (nameof (Commands.LoadConfig), "加载配置", MessagePermissionLevel.Master, nameof (Commands.LoadConfig));
 				TextCommandSystem.Add<Commands> (nameof (Commands.SaveConfig), "保存配置", MessagePermissionLevel.Master, nameof (Commands.SaveConfig));
 				TextCommandSystem.Add<Commands> (nameof (Commands.AddGroup), "添加群", MessagePermissionLevel.Master, nameof (Commands.AddGroup));
@@ -122,6 +125,8 @@ namespace com.eruru.warframe {
 				TextCommandSystem.Add<Commands> (nameof (Commands.RemoveRelayGroupByGroup), "删除转发群", "<群号>", MessagePermissionLevel.Master, nameof (Commands.RemoveRelayGroupByGroup));
 				TextCommandSystem.Add<Commands> (nameof (Commands.AddTranslate), "添加翻译", "<英文> <中文>", MessagePermissionLevel.Master, nameof (Commands.AddTranslate));
 				TextCommandSystem.Add<Commands> (nameof (Commands.RemoveTranslate), "删除翻译", "<英文>", MessagePermissionLevel.Master, nameof (Commands.RemoveTranslate));
+				TextCommandSystem.Add<Commands> (nameof (Commands.AddWarframeMarketTranslate), "添加WM翻译", "<中文> <英文>", MessagePermissionLevel.Master, nameof (Commands.AddWarframeMarketTranslate));
+				TextCommandSystem.Add<Commands> (nameof (Commands.RemoveWarframeMarketTranslate), "删除WM翻译", "<中文>", MessagePermissionLevel.Master, nameof (Commands.RemoveWarframeMarketTranslate));
 				TextCommandSystem.PermissionError += TextCommandSystem_PermissionError;
 				NoticeSystem.Add (nameof (Commands.News), () => {
 					Api.BroadcastGroupMessage (WarframeStatus.GetNewsInformation ());
@@ -195,7 +200,7 @@ namespace com.eruru.warframe {
 		}
 
 		public void ApplyConfig () {
-			Config.Read (config => {
+			Config.Read ((ref Config config) => {
 				NoticeSystem.StartTime = config.StartNoticeTime;
 				NoticeSystem.EndTime = config.EndNoticeTime;
 				NoticeSystem.MinimumInterval = config.MinimumNoticeInterval;
@@ -208,37 +213,37 @@ namespace com.eruru.warframe {
 			if (message is null) {
 				throw new ArgumentNullException (nameof (message));
 			}
-			Config.Read (config => {
-				if (message.Group > 0 && config.RelayGroups.Contains (message.Group)) {
-					Api.BroadcastGroupMessage (message);
-				}
-				MessagePermissionLevel messagePermissionLevel;
-				if (message.QQ == config.Developer) {
-					messagePermissionLevel = MessagePermissionLevel.Developer;
-				} else if (message.QQ == config.Master) {
-					messagePermissionLevel = MessagePermissionLevel.Master;
-				} else {
-					switch (message.Type) {
-						case QMMessageType.Friend:
-							messagePermissionLevel = MessagePermissionLevel.Friend;
-							break;
-						case QMMessageType.GroupTemp:
-							messagePermissionLevel = MessagePermissionLevel.GroupTemp;
-							break;
-						case QMMessageType.Group:
-							messagePermissionLevel = MessagePermissionLevel.Group;
-							break;
-						default:
-							throw new NotImplementedException (message.Type.ToString ());
+			Task.Run (() => {
+				Config.Read ((ref Config config) => {
+					if (message.Group > 0 && config.RelayGroups.Contains (message.Group)) {
+						Api.BroadcastGroupMessage (message);
 					}
-				}
-				if (messagePermissionLevel < MessagePermissionLevel.Master) {
-					if (message.Group > 0 && !config.Groups.Contains (message.Group)) {
-						return;
+					MessagePermissionLevel messagePermissionLevel;
+					if (message.QQ == config.Developer) {
+						messagePermissionLevel = MessagePermissionLevel.Developer;
+					} else if (message.QQ == config.Master) {
+						messagePermissionLevel = MessagePermissionLevel.Master;
+					} else {
+						switch (message.Type) {
+							case QMMessageType.Friend:
+								messagePermissionLevel = MessagePermissionLevel.Friend;
+								break;
+							case QMMessageType.GroupTemp:
+								messagePermissionLevel = MessagePermissionLevel.GroupTemp;
+								break;
+							case QMMessageType.Group:
+								messagePermissionLevel = MessagePermissionLevel.Group;
+								break;
+							default:
+								throw new NotImplementedException (message.Type.ToString ());
+						}
 					}
-				}
-				message.Tag = messagePermissionLevel;
-				Task.Run (() => {
+					if (messagePermissionLevel < MessagePermissionLevel.Master) {
+						if (message.Group > 0 && !config.Groups.Contains (message.Group)) {
+							return;
+						}
+					}
+					message.Tag = messagePermissionLevel;
 					try {
 						CatchMessageSystem.Execute (message);
 						TextCommandSystem.Execute (message.Text, message, messagePermissionLevel);

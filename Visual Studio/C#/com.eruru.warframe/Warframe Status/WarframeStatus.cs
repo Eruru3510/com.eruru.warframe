@@ -60,13 +60,11 @@ namespace com.eruru.warframe {
 		public WarframeStatusSyndicateMission SolarisUnitedBounty;
 
 		static readonly Timer Timer = new Timer ();
-		static readonly ReaderWriterLockHelper ReaderWriterLockHelper = new ReaderWriterLockHelper ();
+		static readonly ReaderWriterLockHelper<WarframeStatus> ReaderWriterLockHelper = new ReaderWriterLockHelper<WarframeStatus> (new WarframeStatus ());
 		static readonly Http Http = new Http ();
 		static readonly HttpRequestInformation HttpRequestInformation = new HttpRequestInformation () {
 			Request = httpWebRequest => httpWebRequest.Headers.Set (HttpRequestHeader.AcceptLanguage, "zh-cn")
 		};
-
-		static WarframeStatus Instance = new WarframeStatus ();
 
 		WarframeStatusSyndicateMission[] _SyndicateMissions;
 
@@ -88,20 +86,22 @@ namespace com.eruru.warframe {
 					}
 				} else {
 					await Task.Run (() => {
-						Config.Read (config => {
-							json = Http.Request (config.WarframeStatusUrl, HttpRequestInformation);
+						string url = null;
+						Config.Read ((ref Config config) => {
+							url = config.WarframeStatusUrl;
 						});
+						json = Http.Request (url, HttpRequestInformation);
 					});
 				}
 				json = Strings.StrConv (json, VbStrConv.SimplifiedChinese);
-				ReaderWriterLockHelper.Write (() => {
-					Instance = JsonConvert.Deserialize (json, Instance);
+				ReaderWriterLockHelper.Write ((ref WarframeStatus instance) => {
+					instance = JsonConvert.Deserialize (json, instance);
 				});
 				if (cache) {
 					Timer.Add (DateTime.Now.AddMilliseconds (1));
 				} else {
 					File.WriteAllText (Paths.WarframeStatusCacheFile, json);
-					Config.Read (config => {
+					Config.Read ((ref Config config) => {
 						Timer.Add (DateTime.Now.AddMilliseconds (config.WarframeStatusUpdateInterval));
 					});
 				}
@@ -110,7 +110,7 @@ namespace com.eruru.warframe {
 				if (cache) {
 					Timer.Add (DateTime.Now.AddMilliseconds (1));
 				} else {
-					Config.Read (config => {
+					Config.Read ((ref Config config) => {
 						Timer.Add (DateTime.Now.AddMilliseconds (config.WarframeStatusUpdateRetryInterval));
 					});
 				}
@@ -123,13 +123,14 @@ namespace com.eruru.warframe {
 		}
 
 		public static StringBuilder GetNewsInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
 					stringBuilder = GetInformation (
 						stringBuilder,
-						config.Commands.News[CommandIndexName.Default].Header, null,
-						config.Commands.News[CommandIndexName.Default].Item, Instance.News, null, item => new object[] { item },
-						config.Commands.News[CommandIndexName.Default].Footer, null
+						tempConfig.Commands.News[CommandIndexName.Default].Header, null,
+						tempConfig.Commands.News[CommandIndexName.Default].Item, instance.News, null, item => new object[] { item },
+						tempConfig.Commands.News[CommandIndexName.Default].Footer, null
 					);
 				});
 			});
@@ -137,17 +138,18 @@ namespace com.eruru.warframe {
 		}
 
 		public static StringBuilder GetEventInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
-					if ((Instance.Events?.Length ?? 0) == 0) {
-						stringBuilder = Localizer.Execute (stringBuilder, config.Commands.Event[CommandIndexName.NoResult].Header);
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+					if ((instance.Events?.Length ?? 0) == 0) {
+						stringBuilder = Localizer.Execute (stringBuilder, tempConfig.Commands.Event[CommandIndexName.NoResult].Header);
 						return;
 					}
 					stringBuilder = GetInformation (
 						stringBuilder,
-						config.Commands.Event[CommandIndexName.Default].Header, null,
-						config.Commands.Event[CommandIndexName.Default].Item, Instance.Events, null, item => new object[] { item },
-						config.Commands.Event[CommandIndexName.Default].Footer, null
+						tempConfig.Commands.Event[CommandIndexName.Default].Header, null,
+						tempConfig.Commands.Event[CommandIndexName.Default].Item, instance.Events, null, item => new object[] { item },
+						tempConfig.Commands.Event[CommandIndexName.Default].Footer, null
 					);
 				});
 			});
@@ -155,17 +157,18 @@ namespace com.eruru.warframe {
 		}
 
 		public static StringBuilder GetAlertInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
-					if ((Instance.Alerts?.Length ?? 0) == 0) {
-						stringBuilder = Localizer.Execute (stringBuilder, config.Commands.Alert[CommandIndexName.NoResult].Header);
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+					if ((instance.Alerts?.Length ?? 0) == 0) {
+						stringBuilder = Localizer.Execute (stringBuilder, tempConfig.Commands.Alert[CommandIndexName.NoResult].Header);
 						return;
 					}
 					stringBuilder = GetInformation (
 						stringBuilder,
-						config.Commands.Alert[CommandIndexName.Default].Header, null,
-						config.Commands.Alert[CommandIndexName.Default].Item, Instance.Alerts, null, item => new object[] { item, item.Mission },
-						config.Commands.Alert[CommandIndexName.Default].Footer, null
+						tempConfig.Commands.Alert[CommandIndexName.Default].Header, null,
+						tempConfig.Commands.Alert[CommandIndexName.Default].Item, instance.Alerts, null, item => new object[] { item, item.Mission },
+						tempConfig.Commands.Alert[CommandIndexName.Default].Footer, null
 					);
 				});
 			});
@@ -173,26 +176,28 @@ namespace com.eruru.warframe {
 		}
 
 		public static StringBuilder GetArbitrationInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
-					if (string.IsNullOrEmpty (Instance.Arbitration.Node)) {
-						stringBuilder = Localizer.Execute (stringBuilder, config.Commands.Arbitration[CommandIndexName.NoResult].Header);
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+					if (string.IsNullOrEmpty (instance.Arbitration.Node)) {
+						stringBuilder = Localizer.Execute (stringBuilder, tempConfig.Commands.Arbitration[CommandIndexName.NoResult].Header);
 						return;
 					}
-					stringBuilder = Localizer.Execute (stringBuilder, config.Commands.Arbitration[CommandIndexName.Default].Header, Instance.Arbitration);
+					stringBuilder = Localizer.Execute (stringBuilder, tempConfig.Commands.Arbitration[CommandIndexName.Default].Header, instance.Arbitration);
 				});
 			});
 			return stringBuilder;
 		}
 
 		public static StringBuilder GetSortieInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
 					stringBuilder = GetInformation (
 						stringBuilder,
-						config.Commands.Sortie[CommandIndexName.Default].Header, new object[] { Instance.Sortie },
-						config.Commands.Sortie[CommandIndexName.Default].Item, Instance.Sortie.Variants, null, item => new object[] { item },
-						config.Commands.Sortie[CommandIndexName.Default].Footer, new object[] { Instance.Sortie }
+						tempConfig.Commands.Sortie[CommandIndexName.Default].Header, new object[] { instance.Sortie },
+						tempConfig.Commands.Sortie[CommandIndexName.Default].Item, instance.Sortie.Variants, null, item => new object[] { item },
+						tempConfig.Commands.Sortie[CommandIndexName.Default].Footer, new object[] { instance.Sortie }
 					);
 				});
 			});
@@ -200,34 +205,35 @@ namespace com.eruru.warframe {
 		}
 
 		public static StringBuilder GetOstronsBountyInformation (StringBuilder stringBuilder = null) {
-			ReaderWriterLockHelper.Read (() => {
-				stringBuilder = GetBountyInformation (stringBuilder, Instance.OstronsBounty, config => config.Commands.OstronsBounty);
+			ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+				stringBuilder = GetBountyInformation (stringBuilder, instance.OstronsBounty, config => config.Commands.OstronsBounty);
 			});
 			return stringBuilder;
 		}
 
 		public static StringBuilder GetEntratiBountyInformation (StringBuilder stringBuilder = null) {
-			ReaderWriterLockHelper.Read (() => {
-				stringBuilder = GetBountyInformation (stringBuilder, Instance.EntratiBounty, config => config.Commands.EntratiBounty);
+			ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+				stringBuilder = GetBountyInformation (stringBuilder, instance.EntratiBounty, config => config.Commands.EntratiBounty);
 			});
 			return stringBuilder;
 		}
 
 		public static StringBuilder GetSolarisUnitedBountyInformation (StringBuilder stringBuilder = null) {
-			ReaderWriterLockHelper.Read (() => {
-				stringBuilder = GetBountyInformation (stringBuilder, Instance.SolarisUnitedBounty, config => config.Commands.SolarisUnitedBounty);
+			ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+				stringBuilder = GetBountyInformation (stringBuilder, instance.SolarisUnitedBounty, config => config.Commands.SolarisUnitedBounty);
 			});
 			return stringBuilder;
 		}
 
 		public static StringBuilder GetFissureInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
 					stringBuilder = GetInformation (
 						stringBuilder,
-						config.Commands.Fissure[CommandIndexName.Default].Header, null,
-						config.Commands.Fissure[CommandIndexName.Default].Item, Instance.Fissures, null, item => new object[] { item },
-						config.Commands.Fissure[CommandIndexName.Default].Footer, null
+						tempConfig.Commands.Fissure[CommandIndexName.Default].Header, null,
+						tempConfig.Commands.Fissure[CommandIndexName.Default].Item, instance.Fissures, null, item => new object[] { item },
+						tempConfig.Commands.Fissure[CommandIndexName.Default].Footer, null
 					);
 				});
 			});
@@ -235,13 +241,14 @@ namespace com.eruru.warframe {
 		}
 
 		public static StringBuilder GetInvasionInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
 					stringBuilder = GetInformation (
 						stringBuilder,
-						config.Commands.Invasion[CommandIndexName.Default].Header, null,
-						config.Commands.Invasion[CommandIndexName.Default].Item, Instance.Invasions, item => !item.Completed, item => new object[] { item },
-						config.Commands.Invasion[CommandIndexName.Default].Footer, null
+						tempConfig.Commands.Invasion[CommandIndexName.Default].Header, null,
+						tempConfig.Commands.Invasion[CommandIndexName.Default].Item, instance.Invasions, item => !item.Completed, item => new object[] { item },
+						tempConfig.Commands.Invasion[CommandIndexName.Default].Footer, null
 					);
 				});
 			});
@@ -249,67 +256,73 @@ namespace com.eruru.warframe {
 		}
 
 		public static StringBuilder GetVoidTraderInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
-					if (Instance.VoidTrader.Active) {
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+					if (instance.VoidTrader.Active) {
 						stringBuilder = GetInformation (
 							stringBuilder,
-							config.Commands.VoidTrader[CommandIndexName.Default].Header, new object[] { Instance.VoidTrader },
-							config.Commands.VoidTrader[CommandIndexName.Default].Item, Instance.VoidTrader.Inventory, null, item => new object[] { item },
-							config.Commands.VoidTrader[CommandIndexName.Default].Footer, new object[] { Instance.VoidTrader }
+							tempConfig.Commands.VoidTrader[CommandIndexName.Default].Header, new object[] { instance.VoidTrader },
+							tempConfig.Commands.VoidTrader[CommandIndexName.Default].Item, instance.VoidTrader.Inventory, null, item => new object[] { item },
+							tempConfig.Commands.VoidTrader[CommandIndexName.Default].Footer, new object[] { instance.VoidTrader }
 						);
 						return;
 					}
-					stringBuilder = Localizer.Execute (stringBuilder, config.Commands.VoidTrader[CommandIndexName.NoResult].Header, Instance.VoidTrader);
+					stringBuilder = Localizer.Execute (stringBuilder, tempConfig.Commands.VoidTrader[CommandIndexName.NoResult].Header, instance.VoidTrader);
 				});
 			});
 			return stringBuilder;
 		}
 
 		public static StringBuilder GetEarthCycleInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
-					stringBuilder = Localizer.Execute (stringBuilder, config.Commands.EarthCycle[CommandIndexName.Default].Header, Instance.EarthCycle);
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+					stringBuilder = Localizer.Execute (stringBuilder, tempConfig.Commands.EarthCycle[CommandIndexName.Default].Header, instance.EarthCycle);
 				});
 			});
 			return stringBuilder;
 		}
 
 		public static StringBuilder GetCetusCycleInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
-					stringBuilder = Localizer.Execute (stringBuilder, config.Commands.CetusCycle[CommandIndexName.Default].Header, Instance.CetusCycle);
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+					stringBuilder = Localizer.Execute (stringBuilder, tempConfig.Commands.CetusCycle[CommandIndexName.Default].Header, instance.CetusCycle);
 				});
 			});
 			return stringBuilder;
 		}
 
 		public static StringBuilder GetCambionCycleInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
-					stringBuilder = Localizer.Execute (stringBuilder, config.Commands.CambionCycle[CommandIndexName.Default].Header, Instance.CambionCycle);
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+					stringBuilder = Localizer.Execute (stringBuilder, tempConfig.Commands.CambionCycle[CommandIndexName.Default].Header, instance.CambionCycle);
 				});
 			});
 			return stringBuilder;
 		}
 
 		public static StringBuilder GetVallisCycleInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
-					stringBuilder = Localizer.Execute (stringBuilder, config.Commands.VallisCycle[CommandIndexName.Default].Header, Instance.VallisCycle);
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+					stringBuilder = Localizer.Execute (stringBuilder, tempConfig.Commands.VallisCycle[CommandIndexName.Default].Header, instance.VallisCycle);
 				});
 			});
 			return stringBuilder;
 		}
 
 		public static StringBuilder GetDailyDealInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
 					stringBuilder = GetInformation (
 						stringBuilder,
-						config.Commands.DailyDeal[CommandIndexName.Default].Header, new object[] { Instance.DailyDeals[0] },
-						config.Commands.DailyDeal[CommandIndexName.Default].Item, Instance.DailyDeals, null, item => new object[] { item },
-						config.Commands.DailyDeal[CommandIndexName.Default].Footer, new object[] { Instance.DailyDeals[0] }
+						tempConfig.Commands.DailyDeal[CommandIndexName.Default].Header, new object[] { instance.DailyDeals[0] },
+						tempConfig.Commands.DailyDeal[CommandIndexName.Default].Item, instance.DailyDeals, null, item => new object[] { item },
+						tempConfig.Commands.DailyDeal[CommandIndexName.Default].Footer, new object[] { instance.DailyDeals[0] }
 					);
 				});
 			});
@@ -317,17 +330,18 @@ namespace com.eruru.warframe {
 		}
 
 		public static StringBuilder GetNightwaveInformation (StringBuilder stringBuilder = null) {
-			Config.Read (config => {
-				ReaderWriterLockHelper.Read (() => {
-					if (!Instance.Nightwave.Active) {
-						stringBuilder = Localizer.Execute (stringBuilder, config.Commands.Nightwave[CommandIndexName.NoResult].Header);
+			Config.Read ((ref Config config) => {
+				Config tempConfig = config;
+				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+					if (!instance.Nightwave.Active) {
+						stringBuilder = Localizer.Execute (stringBuilder, tempConfig.Commands.Nightwave[CommandIndexName.NoResult].Header);
 						return;
 					}
 					stringBuilder = GetInformation (
 						stringBuilder,
-						config.Commands.Nightwave[CommandIndexName.Default].Header, null,
-						config.Commands.Nightwave[CommandIndexName.Default].Item, Instance.Nightwave.ActiveChallenges, null, item => new object[] { item },
-						config.Commands.Nightwave[CommandIndexName.Default].Footer, null
+						tempConfig.Commands.Nightwave[CommandIndexName.Default].Header, null,
+						tempConfig.Commands.Nightwave[CommandIndexName.Default].Item, instance.Nightwave.ActiveChallenges, null, item => new object[] { item },
+						tempConfig.Commands.Nightwave[CommandIndexName.Default].Footer, null
 					);
 				});
 			});
@@ -372,7 +386,7 @@ namespace com.eruru.warframe {
 			if (func is null) {
 				throw new ArgumentNullException (nameof (func));
 			}
-			Config.Read (config => {
+			Config.Read ((ref Config config) => {
 				var commandSet = func (config);
 				stringBuilder = GetInformation (
 					stringBuilder,

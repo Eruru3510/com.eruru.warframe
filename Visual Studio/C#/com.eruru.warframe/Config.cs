@@ -13,8 +13,8 @@ namespace com.eruru.warframe {
 		public long Master { get; set; }
 		public int StartNoticeTime { get; set; } = 6;
 		public int EndNoticeTime { get; set; } = 24;
-		public long MinimumNoticeInterval { get; set; } = Api.MinutesToMilliseconds (60);
-		public long MaximumNoticeInterval { get; set; } = Api.MinutesToMilliseconds (120);
+		public long MinimumNoticeInterval { get; set; } = Api.HoursToMillisecond (1);
+		public long MaximumNoticeInterval { get; set; } = Api.HoursToMillisecond (4);
 		public long MessageReplyTimeout {
 
 			get => _MessageReplyTimeout;
@@ -87,7 +87,7 @@ namespace com.eruru.warframe {
 					value = Api.MinutesToMilliseconds (1);
 				}
 				_WarframeMarketUpdateInterval = value;
-				warframe.WarframeMarket.TimerInterval = value;
+				WarframeMarket.TimerInterval = value;
 			}
 
 		}
@@ -104,18 +104,18 @@ namespace com.eruru.warframe {
 
 		}
 		public int WarframeMarketMaxResultNumber { get; set; } = 10;
+		public int WikiMaxResultNumber { get; set; } = 10;
 		public List<long> Groups { get; set; } = new List<long> ();
 		public List<long> RelayGroups { get; set; } = new List<long> ();
 		public CommandSet Commands = new CommandSet ();
 		public SortedDictionary<string, string> Translates { get; set; } = new SortedDictionary<string, string> ();
+		public SortedDictionary<string, string> WarframeMarketTranslates { get; set; } = new SortedDictionary<string, string> ();
 
-		static readonly ReaderWriterLockHelper ReaderWriterLockHelper = new ReaderWriterLockHelper ();
+		static readonly ReaderWriterLockHelper<Config> ReaderWriterLockHelper = new ReaderWriterLockHelper<Config> (new Config ());
 		static readonly JsonConfig JsonConfig = new JsonConfig () {
 			Compress = false,
 			IgnoreDefaultValue = true
 		};
-
-		static Config Instance = new Config ();
 
 		long _MessageReplyTimeout = Api.MinutesToMilliseconds (10);
 		long _WarframeStatusUpdateInterval = Api.MinutesToMilliseconds (1);
@@ -129,50 +129,71 @@ namespace com.eruru.warframe {
 			QMHelperApi.Debug ("开始加载配置");
 			if (File.Exists (Paths.ConfigFile)) {
 				try {
-					ReaderWriterLockHelper.Write (() => {
-						Instance = JsonConvert.DeserializeFile (Paths.ConfigFile, Instance, JsonConfig);
+					ReaderWriterLockHelper.Write ((ref Config config) => {
+						config = JsonConvert.DeserializeFile (Paths.ConfigFile, config, JsonConfig);
 					});
+					QMHelperApi.Debug ("配置加载完毕");
 				} catch (Exception exception) {
 					QMHelperApi.Debug ($"配置加载失败{Environment.NewLine}{exception}");
-					return;
 				}
 			}
-			QMHelperApi.Debug ("配置加载完毕");
 		}
 
 		public static void Save () {
 			QMHelperApi.Debug ("开始保存配置");
 			try {
-				ReaderWriterLockHelper.Read (() => {
-					JsonConvert.Serialize (Instance, Paths.ConfigFile, JsonConfig);
+				ReaderWriterLockHelper.Read ((ref Config config) => {
+					JsonConvert.Serialize (config, Paths.ConfigFile, JsonConfig);
 				});
+				QMHelperApi.Debug ("配置保存完毕");
 			} catch (Exception exception) {
 				QMHelperApi.Debug ($"配置保存失败{Environment.NewLine}{exception}");
-				return;
 			}
-			QMHelperApi.Debug ("配置保存完毕");
 		}
 
-		public static void Read (Action<Config> action) {
+		public static void Read (ReaderWriterLockHelperAction<Config> action) {
 			if (action is null) {
 				throw new ArgumentNullException (nameof (action));
 			}
-			ReaderWriterLockHelper.Read (() => {
-				action (Instance);
-			});
+			ReaderWriterLockHelper.Read (action);
 		}
 
-		public static void Write (Action<Config> action) {
+		public static void Write (ReaderWriterLockHelperAction<Config> action) {
 			if (action is null) {
 				throw new ArgumentNullException (nameof (action));
 			}
-			ReaderWriterLockHelper.Write (() => {
-				action (Instance);
-			});
+			ReaderWriterLockHelper.Write (action);
 		}
 
 		public class CommandSet {
 
+			public Dictionary<string, Command> Wiki { get; set; } = new Dictionary<string, Command> () {
+				{
+					CommandIndexName.Default,
+					new Command (
+						$"查询到多个关于\"[{nameof (CommandHeader.Keyword)}]\"的Wiki页面，请输入序号选择（前[{nameof (CommandHeader.MaxResultNumber)}]条）：",
+						$"[{nameof (CommandItem.OrderNumber)}]、[{nameof (CommandItem.Title)}]{Environment.NewLine}[{nameof (CommandItem.Url)}]{Environment.NewLine}[{nameof (CommandItem.Description)}]"
+					)
+				},
+				{
+					CommandIndexName.StartQuery,
+					new Command (
+						$"开始查询关于\"[{nameof (CommandHeader.Keyword)}]\"的Wiki页面"
+					)
+				},
+				{
+					CommandIndexName.NoResult,
+					new Command (
+						$"未找到关于\"[{nameof (CommandHeader.Keyword)}]\"的Wiki页面"
+					)
+				},
+				{
+					CommandIndexName.OrderNumberError,
+					new Command (
+						$"请输入1-[{nameof (CommandHeader.ResultNumber)}]之间的序号"
+					)
+				}
+			};
 			public Dictionary<string, Command> Translate { get; set; } = new Dictionary<string, Command> () {
 				{
 					CommandIndexName.Default,
@@ -199,7 +220,7 @@ namespace com.eruru.warframe {
 				{
 					CommandIndexName.NoResult,
 					new Command (
-						$"没有找到关于\"[{nameof (CommandHeader.Keyword)}]\"的WM物品"
+						$"没有找到关于\"[{nameof (CommandHeader.Keyword)}]\"的WM物品{Environment.NewLine}使用\"绑定 <关键字>\"命令可绑定WM物品"
 					)
 				},
 				{
@@ -261,13 +282,13 @@ namespace com.eruru.warframe {
 				{
 					CommandIndexName.PrivateChatText,
 					new Command (
-						$"/w [{nameof (CommandItem.InGameName)}] Hi! I want to buy: [{nameof (CommandItem.ItemName)}] for [{nameof (CommandItem.Platinum)}] platinum. (warframe.market)"
+						$"/w [{nameof (CommandItem.InGameName)}] Hi! I want to [{nameof (CommandHeader.ChatOrderType)}]: [{nameof (CommandItem.ItemName)}] for [{nameof (CommandItem.Platinum)}] platinum. (warframe.market)"
 					)
 				},
 				{
 					CommandIndexName.PrivateChatTextByModRank,
 					new Command (
-						$"/w [{nameof (CommandItem.InGameName)}] Hi! I want to buy: [{nameof (CommandItem.ItemName)}] (rank [{nameof (CommandHeader.ModRank)}]) for [{nameof (CommandItem.Platinum)}] platinum. (warframe.market)"
+						$"/w [{nameof (CommandItem.InGameName)}] Hi! I want to [{nameof (CommandHeader.ChatOrderType)}]: [{nameof (CommandItem.ItemName)}] (rank [{nameof (CommandHeader.ModRank)}]) for [{nameof (CommandItem.Platinum)}] platinum. (warframe.market)"
 					)
 				}
 			};
@@ -472,36 +493,6 @@ namespace com.eruru.warframe {
 			}
 
 		}
-
-		public class NoticeGroup {
-
-			public long Group { get; set; }
-			public int StartTime { get; set; } = 6;
-			public int EndTime { get; set; } = 24;
-
-			public NoticeGroup (long group) {
-				Group = group;
-			}
-
-		}
-
-	}
-
-	public static class CommandIndexName {
-
-		public const string Default = "默认";
-		public const string NoResult = "无结果";
-		public const string ItemOrderNumberError = "物品序号错误";
-		public const string StartQuery = "开始查询";
-		public const string SelectModRank = "选择MOD等级";
-		public const string ModRankError = "MOD等级错误";
-		public const string QueryResult = "查询结果";
-		public const string QueryResultByModRank = "查询结果（MOD等级）";
-		public const string NoQueryResult = "无查询结果";
-		public const string NoQueryResultByModRank = "无查询结果（MOD等级）";
-		public const string PrivateChatText = "私聊文本";
-		public const string PrivateChatTextByModRank = "私聊文本（MOD等级）";
-		public const string PrivateChatOrderNumberError = "私聊序号错误";
 
 	}
 

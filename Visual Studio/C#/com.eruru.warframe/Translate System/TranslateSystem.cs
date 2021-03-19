@@ -28,8 +28,8 @@ namespace com.eruru.warframe {
 		static readonly System.Timers.Timer Timer = new System.Timers.Timer () {
 			AutoReset = false
 		};
-		static readonly ReaderWriterLockHelper ReaderWriterLockHelper = new ReaderWriterLockHelper ();
-		static readonly Dictionary<string, Translate> Translates = new Dictionary<string, Translate> ();
+		static readonly ReaderWriterLockHelper<Dictionary<string, Translate>> ReaderWriterLockHelper =
+			new ReaderWriterLockHelper<Dictionary<string, Translate>> (new Dictionary<string, Translate> ());
 		static readonly Http Http = new Http ();
 		static readonly HttpRequestInformation HttpRequestInformation = new HttpRequestInformation ();
 
@@ -50,26 +50,26 @@ namespace com.eruru.warframe {
 					}
 				} else {
 					await Task.Run (() => {
-						Config.Read (config => {
-							json = Http.Request (config.TranslateUrl, HttpRequestInformation);
+						string url = null;
+						Config.Read ((ref Config config) => {
+							url = config.TranslateUrl;
 						});
+						json = Http.Request (url, HttpRequestInformation);
 					});
 				}
 				await Task.Run (() => {
-					Config.Read (config => {
+					Config.Read ((ref Config config) => {
 						JsonValue content = JsonObject.Parse (json)["query"]["pages"][0]["revisions"][0]["content"];
 						JsonObject jsonObject = JsonObject.Parse (content)["Text"];
 						int total = jsonObject.Count + config.Translates.Count;
-						ReaderWriterLockHelper.Write (() => {
-							Translates.Clear ();
-							int i = 0;
+						Config tempConfig = config;
+						ReaderWriterLockHelper.Write ((ref Dictionary<string, Translate> translates) => {
+							translates.Clear ();
 							foreach (JsonKey key in jsonObject) {
-								Translates.Add (key.Name, new Translate (key.Name, key));
-								i++;
+								translates.Add (key.Name, new Translate (key.Name, key));
 							}
-							foreach (var translate in config.Translates) {
-								Translates.Add (translate.Key, new Translate (translate.Key, translate.Value));
-								i++;
+							foreach (var translate in tempConfig.Translates) {
+								translates.Add (translate.Key, new Translate (translate.Key, translate.Value));
 							}
 						});
 					});
@@ -78,7 +78,7 @@ namespace com.eruru.warframe {
 					TimerInterval = 1;
 				} else {
 					File.WriteAllText (Paths.TranslateCacheFile, json);
-					Config.Read (config => {
+					Config.Read ((ref Config config) => {
 						TimerInterval = config.TranslateUpdateInterval;
 					});
 				}
@@ -87,7 +87,7 @@ namespace com.eruru.warframe {
 				if (cache) {
 					TimerInterval = 1;
 				} else {
-					Config.Read (config => {
+					Config.Read ((ref Config config) => {
 						TimerInterval = config.TranslateUpdateRetryInterval;
 					});
 				}
@@ -99,7 +99,8 @@ namespace com.eruru.warframe {
 			if (text is null) {
 				throw new ArgumentNullException (nameof (text));
 			}
-			if (Translates.TryGetValue (text, out Translate translate)) {
+			Translate translate = Get (text, TranslateSearchType.KeyOnly);
+			if (translate != null) {
 				return translate.Value;
 			}
 			StringBuilder stringBuilder = new StringBuilder (text);
@@ -107,7 +108,8 @@ namespace com.eruru.warframe {
 			for (int i = tokens.Length - 1; i > 0; i--) {
 				for (int n = 0; n + i <= tokens.Length; n++) {
 					string value = string.Join (" ", tokens, n, i);
-					if (Translates.TryGetValue (value, out translate)) {
+					translate = Get (value, TranslateSearchType.KeyOnly);
+					if (translate != null) {
 						stringBuilder.Replace (value, translate.Value);
 					}
 				}
@@ -120,23 +122,21 @@ namespace com.eruru.warframe {
 				throw new ArgumentNullException (nameof (text));
 			}
 			StringBuilder stringBuilder = new StringBuilder ();
-			ReaderWriterLockHelper.Read (() => {
-				Match match = Regex.Match (text, @"(.*?) ?($|\((.*?)\))");
-				switch (match.Groups[1].Value) {
-					case "Plains of Eidolon":
-						stringBuilder.Append ("夜灵平野");
-						break;
-					case "Orb Vallis":
-						stringBuilder.Append ("奥布山谷");
-						break;
-					default:
-						stringBuilder.Append (match.Groups[1].Value);
-						break;
-				}
-				if (match.Groups[3].Length > 0) {
-					stringBuilder.Append ($" ({TranslateItem (match.Groups[3].Value)})");
-				}
-			});
+			Match match = Regex.Match (text, @"(.*?) ?($|\((.*?)\))");
+			switch (match.Groups[1].Value) {
+				case "Plains of Eidolon":
+					stringBuilder.Append ("夜灵平野");
+					break;
+				case "Orb Vallis":
+					stringBuilder.Append ("奥布山谷");
+					break;
+				default:
+					stringBuilder.Append (match.Groups[1].Value);
+					break;
+			}
+			if (match.Groups[3].Length > 0) {
+				stringBuilder.Append ($" ({TranslateItem (match.Groups[3].Value)})");
+			}
 			return stringBuilder.ToString ();
 		}
 
@@ -145,8 +145,8 @@ namespace com.eruru.warframe {
 				throw new ArgumentNullException (nameof (text));
 			}
 			Translate translate = null;
-			ReaderWriterLockHelper.Read (() => {
-				foreach (var current in Translates) {
+			ReaderWriterLockHelper.Read ((ref Dictionary<string, Translate> translates) => {
+				foreach (var current in translates) {
 					if (searchType.HasFlag (TranslateSearchType.KeyOnly)) {
 						if (Api.Equals (current.Key, text)) {
 							translate = current.Value;
@@ -168,23 +168,23 @@ namespace com.eruru.warframe {
 			if (keyword is null) {
 				throw new ArgumentNullException (nameof (keyword));
 			}
-			List<Translate> translates = new List<Translate> ();
-			ReaderWriterLockHelper.Read (() => {
-				foreach (var translate in Translates) {
+			List<Translate> results = new List<Translate> ();
+			ReaderWriterLockHelper.Read ((ref Dictionary<string, Translate> translates) => {
+				foreach (var translate in translates) {
 					if (searchType.HasFlag (TranslateSearchType.KeyOnly)) {
 						if (Api.ContainKeyword (translate.Key, keyword, out int index)) {
-							translates.Add (new Translate (translate.Key, translate.Value.Value, index, translate.Key));
+							results.Add (new Translate (translate.Key, translate.Value.Value, index, translate.Key));
 							continue;
 						}
 					}
 					if (searchType.HasFlag (TranslateSearchType.ValueOnly)) {
 						if (Api.ContainKeyword (translate.Value.Value, keyword, out int index)) {
-							translates.Add (new Translate (translate.Key, translate.Value.Value, index, translate.Value.Value));
+							results.Add (new Translate (translate.Key, translate.Value.Value, index, translate.Value.Value));
 						}
 					}
 				}
 			});
-			return translates;
+			return results;
 		}
 
 		public static void Add (string key, string value) {
@@ -194,12 +194,12 @@ namespace com.eruru.warframe {
 			if (value is null) {
 				throw new ArgumentNullException (nameof (value));
 			}
-			ReaderWriterLockHelper.Write (() => {
-				if (!Translates.TryGetValue (key, out Translate translate)) {
+			ReaderWriterLockHelper.Write ((ref Dictionary<string, Translate> translates) => {
+				if (!translates.TryGetValue (key, out Translate translate)) {
 					translate = new Translate {
 						Key = key
 					};
-					Translates.Add (key, translate);
+					translates.Add (key, translate);
 				}
 				translate.Value = value;
 			});
@@ -210,8 +210,8 @@ namespace com.eruru.warframe {
 				throw new ArgumentNullException (nameof (key));
 			}
 			bool found = false;
-			ReaderWriterLockHelper.Write (() => {
-				found = Translates.Remove (key);
+			ReaderWriterLockHelper.Write ((ref Dictionary<string, Translate> translates) => {
+				found = translates.Remove (key);
 			});
 			return found;
 		}

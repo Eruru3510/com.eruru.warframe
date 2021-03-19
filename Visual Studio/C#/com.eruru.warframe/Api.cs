@@ -128,7 +128,7 @@ namespace com.eruru.warframe {
 			if (stringBuilder is null) {
 				throw new ArgumentNullException (nameof (stringBuilder));
 			}
-			Config.Read (config => {
+			Config.Read ((ref Config config) => {
 				ReadOnlyCollection<QQ> robotQQs = QMApiV2.GetFrameAllOnlineQQ ();
 				foreach (long robotQQ in robotQQs) {
 					foreach (long group in config.Groups) {

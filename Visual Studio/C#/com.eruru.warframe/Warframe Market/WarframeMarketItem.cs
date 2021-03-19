@@ -47,6 +47,15 @@ namespace com.eruru.warframe {
 			return Index.CompareTo (item.Index);
 		}
 
+		public WarframeMarketItem Clone () {
+			WarframeMarketItem item = new WarframeMarketItem {
+				UrlName = UrlName,
+				_ItemName = _ItemName,
+				Name = Name
+			};
+			return item;
+		}
+
 	}
 
 }

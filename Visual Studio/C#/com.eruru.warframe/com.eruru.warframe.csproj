@@ -35,20 +35,20 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Eruru.Html, Version=1.0.0.7, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Eruru.Html.1.0.0.7\lib\net45\Eruru.Html.dll</HintPath>
+    <Reference Include="Eruru.Html, Version=1.0.0.8, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.Html.1.0.0.8\lib\net45\Eruru.Html.dll</HintPath>
     </Reference>
     <Reference Include="Eruru.Http, Version=1.0.0.6, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Eruru.Http.1.0.0.6\lib\net45\Eruru.Http.dll</HintPath>
     </Reference>
-    <Reference Include="Eruru.Json, Version=1.0.0.10, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Eruru.Json.1.0.0.10\lib\net45\Eruru.Json.dll</HintPath>
+    <Reference Include="Eruru.Json, Version=1.0.0.12, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.Json.1.0.0.12\lib\net45\Eruru.Json.dll</HintPath>
     </Reference>
     <Reference Include="Eruru.QQMini.PluginSDKHelper, Version=1.0.0.2, Culture=neutral, processorArchitecture=x86">
       <HintPath>..\packages\Eruru.QQMini.PluginSDKHelper.1.0.0.2\lib\net45\Eruru.QQMini.PluginSDKHelper.dll</HintPath>
     </Reference>
-    <Reference Include="Eruru.ReaderWriterLockHelper, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Eruru.ReaderWriterLockHelper.1.0.0.1\lib\net45\Eruru.ReaderWriterLockHelper.dll</HintPath>
+    <Reference Include="Eruru.ReaderWriterLockHelper, Version=1.0.0.2, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.ReaderWriterLockHelper.1.0.0.2\lib\net45\Eruru.ReaderWriterLockHelper.dll</HintPath>
     </Reference>
     <Reference Include="Eruru.TextCommand">
       <HintPath>..\..\..\..\Eruru.TextCommand\Visual Studio\C#\Eruru.TextCommand\bin\Release\net20\Eruru.TextCommand.dll</HintPath>
@@ -56,8 +56,8 @@
     <Reference Include="Eruru.TextTokenizer, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Eruru.TextTokenizer.1.0.0.1\lib\net20\Eruru.TextTokenizer.dll</HintPath>
     </Reference>
-    <Reference Include="Eruru.Timer, Version=1.0.0.3, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Eruru.Timer.1.0.0.3\lib\net45\Eruru.Timer.dll</HintPath>
+    <Reference Include="Eruru.Timer, Version=1.0.0.4, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.Timer.1.0.0.4\lib\net45\Eruru.Timer.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -89,7 +89,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Api.cs" />
+    <Compile Include="Catch Message System\CatchMessage.cs" />
     <Compile Include="Catch Message System\CatchMessageSystem.cs" />
+    <Compile Include="CommandIndexName.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Converters\BountyItemArrayTranslator.cs" />
@@ -115,6 +117,7 @@
     <Compile Include="Translate System\Translate.cs" />
     <Compile Include="Translate System\TranslateSearchType.cs" />
     <Compile Include="Translate System\TranslateSystem.cs" />
+    <Compile Include="UpdateType.cs" />
     <Compile Include="Warframe Market\WarframeMarket.cs" />
     <Compile Include="Warframe Market\WarframeMarketInclude.cs" />
     <Compile Include="Warframe Market\WarframeMarketIncludeItem.cs" />
@@ -144,6 +147,7 @@
     <Compile Include="Warframe Status\WarframeStatusSortie.cs" />
     <Compile Include="Warframe Status\WarframeStatusSyndicateMission.cs" />
     <Compile Include="Warframe Status\WarframeStatusVoidTrader.cs" />
+    <Compile Include="WikiResult.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
