@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using Eruru.QQMini.PluginSDKHelper;
 using QQMini.PluginSDK.Core;
@@ -8,6 +10,8 @@ using QQMini.PluginSDK.Core.Model;
 namespace com.eruru.warframe {
 
 	static class Api {
+
+		static BindingFlags BindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
 
 		public static StringBuilder FormatMillisecond (long milliseconds) {
 			return FormatTimeSpan (new TimeSpan (milliseconds * 10000));
@@ -136,6 +140,25 @@ namespace com.eruru.warframe {
 					}
 				}
 			});
+		}
+
+		public static T ShallowCopy<T> (T instance) where T : class {
+			if (instance is null) {
+				return null;
+			}
+			T newInstance = CreateInstance<T> ();
+			foreach (FieldInfo fieldInfo in typeof (T).GetFields (BindingFlags)) {
+				fieldInfo.SetValue (newInstance, fieldInfo.GetValue (instance));
+			}
+			return newInstance;
+		}
+
+		static T CreateInstance<T> () {
+			Type type = typeof (T);
+			if (type.GetConstructor (Type.EmptyTypes) == null) {
+				return (T)FormatterServices.GetUninitializedObject (type);
+			}
+			return (T)Activator.CreateInstance (type);
 		}
 
 		static bool HasCharacter (string text, ref int i) {

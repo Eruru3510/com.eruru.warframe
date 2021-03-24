@@ -173,13 +173,19 @@ namespace com.eruru.warframe {
 				foreach (var translate in translates) {
 					if (searchType.HasFlag (TranslateSearchType.KeyOnly)) {
 						if (Api.ContainKeyword (translate.Key, keyword, out int index)) {
-							results.Add (new Translate (translate.Key, translate.Value.Value, index, translate.Key));
+							Translate temp = translate.Value.Clone ();
+							temp.Index = index;
+							temp.Text = translate.Key;
+							results.Add (temp);
 							continue;
 						}
 					}
 					if (searchType.HasFlag (TranslateSearchType.ValueOnly)) {
 						if (Api.ContainKeyword (translate.Value.Value, keyword, out int index)) {
-							results.Add (new Translate (translate.Key, translate.Value.Value, index, translate.Value.Value));
+							Translate temp = translate.Value.Clone ();
+							temp.Index = index;
+							temp.Text = translate.Value.Value;
+							results.Add (temp);
 						}
 					}
 				}

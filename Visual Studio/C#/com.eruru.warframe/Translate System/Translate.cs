@@ -35,6 +35,10 @@ namespace com.eruru.warframe {
 			return Index.CompareTo (translate.Index);
 		}
 
+		public Translate Clone () {
+			return Api.ShallowCopy (this);
+		}
+
 	}
 
 }

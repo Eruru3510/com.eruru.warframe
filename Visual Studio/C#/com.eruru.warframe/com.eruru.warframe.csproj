@@ -35,14 +35,14 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Eruru.Html, Version=1.0.0.8, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Eruru.Html.1.0.0.8\lib\net45\Eruru.Html.dll</HintPath>
+    <Reference Include="Eruru.Html, Version=1.0.0.11, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.Html.1.0.0.11\lib\net45\Eruru.Html.dll</HintPath>
     </Reference>
     <Reference Include="Eruru.Http, Version=1.0.0.6, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Eruru.Http.1.0.0.6\lib\net45\Eruru.Http.dll</HintPath>
     </Reference>
-    <Reference Include="Eruru.Json, Version=1.0.0.12, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Eruru.Json.1.0.0.12\lib\net45\Eruru.Json.dll</HintPath>
+    <Reference Include="Eruru.Json, Version=1.0.0.13, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.Json.1.0.0.13\lib\net45\Eruru.Json.dll</HintPath>
     </Reference>
     <Reference Include="Eruru.QQMini.PluginSDKHelper, Version=1.0.0.2, Culture=neutral, processorArchitecture=x86">
       <HintPath>..\packages\Eruru.QQMini.PluginSDKHelper.1.0.0.2\lib\net45\Eruru.QQMini.PluginSDKHelper.dll</HintPath>
@@ -53,8 +53,8 @@
     <Reference Include="Eruru.TextCommand">
       <HintPath>..\..\..\..\Eruru.TextCommand\Visual Studio\C#\Eruru.TextCommand\bin\Release\net20\Eruru.TextCommand.dll</HintPath>
     </Reference>
-    <Reference Include="Eruru.TextTokenizer, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Eruru.TextTokenizer.1.0.0.1\lib\net20\Eruru.TextTokenizer.dll</HintPath>
+    <Reference Include="Eruru.TextTokenizer, Version=1.0.0.2, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.TextTokenizer.1.0.0.2\lib\net20\Eruru.TextTokenizer.dll</HintPath>
     </Reference>
     <Reference Include="Eruru.Timer, Version=1.0.0.4, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Eruru.Timer.1.0.0.4\lib\net45\Eruru.Timer.dll</HintPath>

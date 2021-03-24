@@ -48,12 +48,7 @@ namespace com.eruru.warframe {
 		}
 
 		public WarframeMarketItem Clone () {
-			WarframeMarketItem item = new WarframeMarketItem {
-				UrlName = UrlName,
-				_ItemName = _ItemName,
-				Name = Name
-			};
-			return item;
+			return Api.ShallowCopy (this);
 		}
 
 	}

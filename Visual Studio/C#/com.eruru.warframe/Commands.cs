@@ -9,7 +9,6 @@ using Eruru.Json;
 using Eruru.Localizer;
 using Eruru.QQMini.PluginSDKHelper;
 
-
 namespace com.eruru.warframe {
 
 	public class Commands {
@@ -239,25 +238,7 @@ namespace com.eruru.warframe {
 				if (items.Count == 0) {
 					message.Reply (Localizer.Execute (config.Commands.WarframeMarket[CommandIndexName.NoResult].Header, header));
 					CatchMessageSystem.Add (message, receivedMessage => {
-						if (receivedMessage.Text.StartsWith ("绑定")) {
-							string bindKeyword = receivedMessage.Text.Substring (3);
-							header.Keyword = bindKeyword;
-							items = warframe.WarframeMarket.Search (bindKeyword);
-							if (items.Count == 0) {
-								return false;
-							}
-							if (items.Count == 1) {
-								AddWarframeMarketTranslate (receivedMessage, keyword, items[0].ItemName);
-								return true;
-							}
-							items.Sort ();
-							Config.Read ((ref Config subConfig) => {
-								message.Reply (GetSelectItemInformation (subConfig));
-							});
-							CatchSelectItem (item => AddWarframeMarketTranslate (receivedMessage, keyword, item.ItemName));
-							return true;
-						}
-						return false;
+						return ProcessBind (receivedMessage);
 					});
 					return;
 				}
@@ -271,6 +252,9 @@ namespace com.eruru.warframe {
 			});
 			void CatchSelectItem (Action<WarframeMarketItem> action) {
 				CatchMessageSystem.Add (message, receivedMessage => {
+					if (ProcessBind (receivedMessage)) {
+						return true;
+					}
 					if (int.TryParse (receivedMessage, out int orderNumber)) {
 						if (orderNumber > 0 && orderNumber <= items.Count) {
 							action (items[orderNumber - 1]);
@@ -282,6 +266,28 @@ namespace com.eruru.warframe {
 					}
 					return false;
 				});
+			}
+			bool ProcessBind (QMMessage<MessagePermissionLevel> receivedMessage) {
+				if (receivedMessage.Text.StartsWith ("绑定")) {
+					string bindKeyword = receivedMessage.Text.Substring (3);
+					header.Keyword = bindKeyword;
+					items = warframe.WarframeMarket.Search (bindKeyword);
+					if (items.Count == 0) {
+						return false;
+					}
+					if (items.Count == 1) {
+						AddWarframeMarketTranslate (receivedMessage, keyword, items[0].ItemName);
+						return true;
+					}
+					items.Sort ();
+					header.ResultNumber = items.Count;
+					Config.Read ((ref Config subConfig) => {
+						message.Reply (GetSelectItemInformation (subConfig));
+					});
+					CatchSelectItem (item => AddWarframeMarketTranslate (receivedMessage, keyword, item.ItemName));
+					return true;
+				}
+				return false;
 			}
 			StringBuilder GetSelectItemInformation (Config subConfig) {
 				int i = 0;

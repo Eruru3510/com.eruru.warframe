@@ -214,7 +214,8 @@ namespace com.eruru.warframe {
 					CommandIndexName.Default,
 					new Command (
 						$"查询到多个关于\"[{nameof (CommandHeader.Keyword)}]\"的WM物品，请输入序号选择（前[{nameof (CommandHeader.MaxResultNumber)}]条）：",
-						$"[{nameof (CommandItem.OrderNumber)}]、[{nameof (CommandItem.Name)}] - [{nameof (CommandItem.ItemName)}]"
+						$"[{nameof (CommandItem.OrderNumber)}]、[{nameof (CommandItem.Name)}] - [{nameof (CommandItem.ItemName)}]",
+						$"如结果不正确，可使用\"绑定 <关键字>\"命令绑定WM物品"
 					)
 				},
 				{
@@ -257,7 +258,7 @@ namespace com.eruru.warframe {
 				{
 					CommandIndexName.QueryResultByModRank,
 					new Command (
-						$"WM物品\"[{nameof (CommandItem.Name)}] - [{nameof (CommandItem.ItemName)}]\"（MOD等级[{nameof (CommandHeader.ModRank)}]）的[{nameof (CommandHeader.OrderType)}]列表如下，输入序号可复制私聊信息（前[{nameof (CommandHeader.MaxResultNumber)}]条）：",
+						$"WM物品\"[{nameof (CommandItem.Name)}] - [{nameof (CommandItem.ItemName)}]\"（MOD等级[{nameof (CommandHeader.ModRank)}]/[{nameof (CommandHeader.MaxModRank)}]）的[{nameof (CommandHeader.OrderType)}]列表如下，输入序号可复制私聊信息（前[{nameof (CommandHeader.MaxResultNumber)}]条）：",
 						$"[{nameof (CommandItem.OrderNumber)}]、白金[{nameof (CommandItem.Platinum)}] - [{nameof (CommandItem.Status)}] - 数量[{nameof (CommandItem.Quantity)}] - 昵称：[{nameof (CommandItem.InGameName)}]"
 					)
 				},
@@ -270,7 +271,7 @@ namespace com.eruru.warframe {
 				{
 					CommandIndexName.NoQueryResultByModRank,
 					new Command (
-						$"WM物品\"[{nameof (CommandItem.Name)}] - [{nameof (CommandItem.ItemName)}]\"（MOD等级[{nameof (CommandHeader.ModRank)}]）的[{nameof (CommandHeader.OrderType)}]列表为空"
+						$"WM物品\"[{nameof (CommandItem.Name)}] - [{nameof (CommandItem.ItemName)}]\"（MOD等级[{nameof (CommandHeader.ModRank)}]/[{nameof (CommandHeader.MaxModRank)}]）的[{nameof (CommandHeader.OrderType)}]列表为空"
 					)
 				},
 				{
