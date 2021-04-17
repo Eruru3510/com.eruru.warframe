@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using Eruru.QQMini.PluginSDKHelper;
 using Eruru.TextCommand;
 using QQMini.PluginSDK.Core;
@@ -181,17 +185,17 @@ namespace com.eruru.warframe {
 		}
 
 		public override QMEventHandlerTypes OnReceiveGroupMessage (QMGroupMessageEventArgs e) {
-			OnReceiveMessage (new QMMessage<MessagePermissionLevel> (QMMessageType.Group, e.RobotQQ, e.FromGroup, e.FromQQ, e.Message.Id, e.Message.Number, e.Message));
+			OnReceiveMessage (new QMMessage<MessagePermissionLevel> (QMMessageType.Group, e.RobotQQ, e.FromGroup, e.FromQQ, (int)e.Message.Id, e.Message.Number, e.Message));
 			return QMEventHandlerTypes.Continue;
 		}
 
 		public override QMEventHandlerTypes OnReceiveGroupTempMessage (QMGroupPrivateMessageEventArgs e) {
-			OnReceiveMessage (new QMMessage<MessagePermissionLevel> (QMMessageType.GroupTemp, e.RobotQQ, e.FromGroup, e.FromQQ, e.Message.Id, e.Message.Number, e.Message));
+			OnReceiveMessage (new QMMessage<MessagePermissionLevel> (QMMessageType.GroupTemp, e.RobotQQ, e.FromGroup, e.FromQQ, (int)e.Message.Id, e.Message.Number, e.Message));
 			return QMEventHandlerTypes.Continue;
 		}
 
 		public override QMEventHandlerTypes OnReceiveFriendMessage (QMPrivateMessageEventArgs e) {
-			OnReceiveMessage (new QMMessage<MessagePermissionLevel> (QMMessageType.Friend, e.RobotQQ, e.FromQQ, e.Message.Id, e.Message.Number, e.Message));
+			OnReceiveMessage (new QMMessage<MessagePermissionLevel> (QMMessageType.Friend, e.RobotQQ, e.FromQQ, (int)e.Message.Id, e.Message.Number, e.Message));
 			return QMEventHandlerTypes.Continue;
 		}
 
@@ -216,7 +220,12 @@ namespace com.eruru.warframe {
 			Task.Run (() => {
 				Config.Read ((ref Config config) => {
 					if (message.Group > 0 && config.RelayGroups.Contains (message.Group)) {
-						Api.BroadcastGroupMessage (message);
+						Match match = Regex.Match (message.Text, @"(^{.*}$)");
+						if (match.Success) {
+							Api.BroadcastGroupMessage (match.Groups[1].Value, BroadcastMessageType.Json);
+						} else {
+							Api.BroadcastGroupMessage (message);
+						}
 					}
 					MessagePermissionLevel messagePermissionLevel;
 					if (message.QQ == config.Developer) {

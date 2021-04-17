@@ -55,10 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Eruru.QQMini.PluginSDKDebugger">
-      <Version>1.0.0.2</Version>
-    </PackageReference>
-    <PackageReference Include="Eruru.QQMini.PluginSDKHelper">
-      <Version>1.0.0.2</Version>
+      <Version>1.0.0.3</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

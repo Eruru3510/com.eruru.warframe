@@ -35,8 +35,8 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Eruru.Html, Version=1.0.0.11, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Eruru.Html.1.0.0.11\lib\net45\Eruru.Html.dll</HintPath>
+    <Reference Include="Eruru.Html, Version=1.0.0.12, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Eruru.Html.1.0.0.12\lib\net45\Eruru.Html.dll</HintPath>
     </Reference>
     <Reference Include="Eruru.Http, Version=1.0.0.6, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Eruru.Http.1.0.0.6\lib\net45\Eruru.Http.dll</HintPath>
@@ -44,8 +44,8 @@
     <Reference Include="Eruru.Json, Version=1.0.0.13, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Eruru.Json.1.0.0.13\lib\net45\Eruru.Json.dll</HintPath>
     </Reference>
-    <Reference Include="Eruru.QQMini.PluginSDKHelper, Version=1.0.0.2, Culture=neutral, processorArchitecture=x86">
-      <HintPath>..\packages\Eruru.QQMini.PluginSDKHelper.1.0.0.2\lib\net45\Eruru.QQMini.PluginSDKHelper.dll</HintPath>
+    <Reference Include="Eruru.QQMini.PluginSDKHelper">
+      <HintPath>..\..\..\..\Eruru.QQMini.PluginSDKHelper\Visual Studio\C#\Eruru.QQMini.PluginSDKHelper\bin\x86\Release\net45\Eruru.QQMini.PluginSDKHelper.dll</HintPath>
     </Reference>
     <Reference Include="Eruru.ReaderWriterLockHelper, Version=1.0.0.2, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Eruru.ReaderWriterLockHelper.1.0.0.2\lib\net45\Eruru.ReaderWriterLockHelper.dll</HintPath>
@@ -89,6 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Api.cs" />
+    <Compile Include="BroadcastMessageType.cs" />
     <Compile Include="Catch Message System\CatchMessage.cs" />
     <Compile Include="Catch Message System\CatchMessageSystem.cs" />
     <Compile Include="CommandIndexName.cs" />

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -11,7 +12,7 @@ namespace com.eruru.warframe {
 
 	static class Api {
 
-		static BindingFlags BindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+		static readonly BindingFlags BindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
 
 		public static StringBuilder FormatMillisecond (long milliseconds) {
 			return FormatTimeSpan (new TimeSpan (milliseconds * 10000));
@@ -73,7 +74,7 @@ namespace com.eruru.warframe {
 			return string.Equals (a, b, StringComparison.OrdinalIgnoreCase);
 		}
 
-		public static bool ContainKeywords (string text, string[] keywords) {
+		public static bool ContainAnyKeyword (string text, IEnumerable<string> keywords) {
 			if (text is null) {
 				throw new ArgumentNullException (nameof (text));
 			}
@@ -88,8 +89,9 @@ namespace com.eruru.warframe {
 			return false;
 		}
 
-		public static bool ContainKeyword (string text, string keyword, out int index) {
+		public static bool ContainKeyword (string text, string keyword, out int index, out bool fullMatch) {
 			index = 0;
+			fullMatch = false;
 			if (text is null || keyword is null) {
 				return text == keyword;
 			}
@@ -97,17 +99,23 @@ namespace com.eruru.warframe {
 				return text.Length == keyword.Length;
 			}
 			int i = 0;
+			int count = 0;
+			bool matchHead = false;
 			while (HasCharacter (text, ref i)) {
 				int n = 0;
 				int tempI = i;
 				bool found = true;
+				count++;
 				while (HasCharacter (keyword, ref n)) {
 					if (tempI >= text.Length) {
 						return false;
 					}
-					if (char.ToLower (text[tempI]) != char.ToLower (keyword[n])) {
+					if (char.ToUpperInvariant (text[tempI]) != char.ToUpperInvariant (keyword[n])) {
 						found = false;
 						break;
+					}
+					if (count == 1) {
+						matchHead = true;
 					}
 					tempI++;
 					HasCharacter (text, ref tempI);
@@ -115,6 +123,9 @@ namespace com.eruru.warframe {
 				}
 				if (found) {
 					index = i;
+					if (tempI >= text.Length && matchHead) {
+						fullMatch = true;
+					}
 					return true;
 				}
 				i++;
@@ -122,24 +133,50 @@ namespace com.eruru.warframe {
 			return false;
 		}
 
-		public static void BroadcastGroupMessage (string text) {
+		public static List<QMMessage> BroadcastGroupMessage (string text, BroadcastMessageType messageType = BroadcastMessageType.Text) {
 			if (text is null) {
 				throw new ArgumentNullException (nameof (text));
 			}
-			BroadcastGroupMessage (new StringBuilder (text));
+			return BroadcastGroupMessage (new StringBuilder (text), messageType);
 		}
-		public static void BroadcastGroupMessage (StringBuilder stringBuilder) {
+		public static List<QMMessage> BroadcastGroupMessage (StringBuilder stringBuilder, BroadcastMessageType messageType = BroadcastMessageType.Text) {
 			if (stringBuilder is null) {
 				throw new ArgumentNullException (nameof (stringBuilder));
 			}
+			List<QMMessage> messages = new List<QMMessage> ();
 			Config.Read ((ref Config config) => {
 				ReadOnlyCollection<QQ> robotQQs = QMApiV2.GetFrameAllOnlineQQ ();
 				foreach (long robotQQ in robotQQs) {
 					foreach (long group in config.Groups) {
-						QMMessage<MessagePermissionLevel>.Send (QMMessageType.Group, robotQQ, group, default, stringBuilder);
+						switch (messageType) {
+							case BroadcastMessageType.Text: {
+								Message message = QMMessage.Send (QMMessageType.Group, robotQQ, group, default, stringBuilder);
+								messages.Add (new QMMessage (QMMessageType.Group, robotQQ, group, default, (int)message.Id, message.Number, message.Text));
+								break;
+							}
+							case BroadcastMessageType.Json: {
+								Message message = QMMessage.Send (QMMessageType.GroupJson, robotQQ, group, default, stringBuilder);
+								if (message is null) {
+									break;
+								}
+								messages.Add (new QMMessage (QMMessageType.GroupJson, robotQQ, group, default, (int)message.Id, message.Number, message.Text));
+								break;
+							}
+							default:
+								throw new NotImplementedException ();
+						}
 					}
 				}
 			});
+			return messages;
+		}
+
+		public static bool CanNotice () {
+			bool can = false;
+			Config.Read ((ref Config config) => {
+				can = DateTime.Now.Hour >= config.StartNoticeTime && DateTime.Now.Hour < config.EndNoticeTime;
+			});
+			return can;
 		}
 
 		public static T ShallowCopy<T> (T instance) where T : class {

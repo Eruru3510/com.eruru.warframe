@@ -107,6 +107,7 @@ namespace com.eruru.warframe {
 		public int WikiMaxResultNumber { get; set; } = 10;
 		public List<long> Groups { get; set; } = new List<long> ();
 		public List<long> RelayGroups { get; set; } = new List<long> ();
+		public List<string> BountyItemBlacklistKeywords = new List<string> ();
 		public CommandSet Commands = new CommandSet ();
 		public SortedDictionary<string, string> Translates { get; set; } = new SortedDictionary<string, string> ();
 		public SortedDictionary<string, string> WarframeMarketTranslates { get; set; } = new SortedDictionary<string, string> ();

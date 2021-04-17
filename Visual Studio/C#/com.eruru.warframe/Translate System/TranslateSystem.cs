@@ -172,7 +172,7 @@ namespace com.eruru.warframe {
 			ReaderWriterLockHelper.Read ((ref Dictionary<string, Translate> translates) => {
 				foreach (var translate in translates) {
 					if (searchType.HasFlag (TranslateSearchType.KeyOnly)) {
-						if (Api.ContainKeyword (translate.Key, keyword, out int index)) {
+						if (Api.ContainKeyword (translate.Key, keyword, out int index, out _)) {
 							Translate temp = translate.Value.Clone ();
 							temp.Index = index;
 							temp.Text = translate.Key;
@@ -181,7 +181,7 @@ namespace com.eruru.warframe {
 						}
 					}
 					if (searchType.HasFlag (TranslateSearchType.ValueOnly)) {
-						if (Api.ContainKeyword (translate.Value.Value, keyword, out int index)) {
+						if (Api.ContainKeyword (translate.Value.Value, keyword, out int index, out _)) {
 							Translate temp = translate.Value.Clone ();
 							temp.Index = index;
 							temp.Text = translate.Value.Value;

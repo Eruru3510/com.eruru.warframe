@@ -130,17 +130,27 @@ namespace com.eruru.warframe {
 			return results;
 			void Search (IEnumerable<WarframeMarketItem> items) {
 				foreach (WarframeMarketItem item in items) {
-					if (Api.ContainKeyword (item.Name, keyword, out int index)) {
+					if (Api.ContainKeyword (item.Name, keyword, out int index, out bool fullMatch)) {
 						WarframeMarketItem newItem = item.Clone ();
 						newItem.Index = index;
 						newItem.Text = item.Name;
+						if (fullMatch) {
+							results.Clear ();
+							results.Add (newItem);
+							return;
+						}
 						results.Add (newItem);
 						continue;
 					}
-					if (Api.ContainKeyword (item.ItemName, keyword, out index)) {
+					if (Api.ContainKeyword (item.ItemName, keyword, out index, out fullMatch)) {
 						WarframeMarketItem newItem = item.Clone ();
 						newItem.Index = index;
 						newItem.Text = item.ItemName;
+						if (fullMatch) {
+							results.Clear ();
+							results.Add (newItem);
+							return;
+						}
 						results.Add (newItem);
 					}
 				}

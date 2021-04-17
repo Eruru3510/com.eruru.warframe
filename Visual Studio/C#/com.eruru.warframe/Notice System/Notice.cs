@@ -5,7 +5,7 @@ namespace com.eruru.warframe {
 
 	public class Notice {
 
-		public string Id { get; set; }
+		public string ID { get; set; }
 		public Action Action { get; set; }
 
 		readonly Timer Timer = new Timer () {
@@ -28,12 +28,11 @@ namespace com.eruru.warframe {
 			if (action is null) {
 				throw new ArgumentNullException (nameof (action));
 			}
-			Id = id;
+			ID = id;
 			Action = action;
 			Timer.Elapsed += (sender, e) => {
 				TimerInterval = NoticeSystem.GetInterval ();
 				if (NoticeSystem.CanNotice ()) {
-					Console.Beep ();
 					Action ();
 				}
 			};

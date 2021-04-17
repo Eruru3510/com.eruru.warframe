@@ -6,32 +6,19 @@ namespace com.eruru.warframe {
 
 	public class BountyItemArrayTranslator : IJsonConverter<string[], string> {
 
-		static readonly string[] BlackList = {
-			"Cryotic",
-			"Credits Cache",
-			"Endo",
-			"Grokdrul",
-			"Morphics",
-			"Neural Sensors",
-			"Lens",
-			"Kuva",
-			"Cetus Wisp",
-			"Breath Of The Eidolon",
-			"Pattern Mismatch. Results inaccurate.",
-			"Pustulite"
-		};
-
 		public string Read (string[] value) {
 			StringBuilder stringBuilder = new StringBuilder ();
-			for (int i = 0; i < value.Length; i++) {
-				if (Api.ContainKeywords (value[i], BlackList)) {
-					continue;
+			Config.Read ((ref Config config) => {
+				for (int i = 0; i < value.Length; i++) {
+					if (Api.ContainAnyKeyword (value[i], config.BountyItemBlacklistKeywords)) {
+						continue;
+					}
+					if (stringBuilder.Length > 0) {
+						stringBuilder.Append ('、');
+					}
+					stringBuilder.Append (TranslateSystem.TranslateItem (value[i]));
 				}
-				if (stringBuilder.Length > 0) {
-					stringBuilder.Append ('、');
-				}
-				stringBuilder.Append (TranslateSystem.TranslateItem (value[i]));
-			}
+			});
 			return stringBuilder.ToString ();
 		}
 

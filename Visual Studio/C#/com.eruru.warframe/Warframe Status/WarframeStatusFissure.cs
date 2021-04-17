@@ -6,6 +6,7 @@ namespace com.eruru.warframe {
 
 	public class WarframeStatusFissure : IComparable {
 
+		public string ID;
 		[JsonField (typeof (WarframeStatusUpdater))]
 		[LocalizerField (typeof (RelativeTimeConverter))]
 		public DateTime Expiry;

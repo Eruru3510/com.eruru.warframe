@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,9 +18,45 @@ namespace com.eruru.warframe {
 	public class WarframeStatus {
 
 		[JsonField (typeof (NewsReverser))]
-		public WarframeStatusNews[] News;
-		public WarframeStatusEvent[] Events;
-		public WarframeStatusAlert[] Alerts;
+		public WarframeStatusNews[] News {
+
+			get => _News;
+
+			set {
+				var olds = _News;
+				_News = value;
+				if (value.Length > olds?.Length) {
+					Api.BroadcastGroupMessage (GetNewsInformation (null, item => !olds.Any (old => old.ID == item.ID)));
+				}
+			}
+
+		}
+		public WarframeStatusEvent[] Events {
+
+			get => _Events;
+
+			set {
+				var olds = _Events;
+				_Events = value;
+				if (value.Length > olds?.Length) {
+					Api.BroadcastGroupMessage (GetEventInformation (null, item => !olds.Any (old => old.ID == item.ID)));
+				}
+			}
+
+		}
+		public WarframeStatusAlert[] Alerts {
+
+			get => _Alerts;
+
+			set {
+				var olds = _Alerts;
+				_Alerts = value;
+				if (value.Length > olds?.Length) {
+					Api.BroadcastGroupMessage (GetAlertInformation (null, item => !olds.Any (old => old.ID == item.ID)));
+				}
+			}
+
+		}
 		public WarframeStatusSortie Sortie;
 		public WarframeStatusSyndicateMission[] SyndicateMissions {
 
@@ -42,15 +79,51 @@ namespace com.eruru.warframe {
 
 		}
 		[JsonField (typeof (FissureSorter))]
-		public WarframeStatusFissure[] Fissures;
-		public WarframeStatusInvasion[] Invasions;
+		public WarframeStatusFissure[] Fissures {
+
+			get => _Fissure;
+
+			set {
+				var olds = _Fissure;
+				_Fissure = value;
+				if (value.Length > olds?.Length && Api.CanNotice ()) {
+					Api.BroadcastGroupMessage (GetFissureInformation (null, item => !olds.Any (old => old.ID == item.ID)));
+				}
+			}
+
+		}
+		public WarframeStatusInvasion[] Invasions {
+
+			get => _Invasions;
+
+			set {
+				var olds = _Invasions;
+				_Invasions = value;
+				if (value.Length > olds?.Length && Api.CanNotice ()) {
+					Api.BroadcastGroupMessage (GetInvasionInformation (null, item => !item.Completed && !olds.Any (old => old.ID == item.ID)));
+				}
+			}
+
+		}
 		public WarframeStatusVoidTrader VoidTrader;
 		public WarframeStatusArbitration Arbitration;
 		public WarframeStatusCycle EarthCycle;
 		public WarframeStatusCycle CetusCycle;
 		public WarframeStatusCycle CambionCycle;
 		public WarframeStatusCycle VallisCycle;
-		public WarframeStatusDailyDeal[] DailyDeals;
+		public WarframeStatusDailyDeal[] DailyDeals {
+
+			get => _DailyDeals;
+
+			set {
+				var olds = _DailyDeals;
+				_DailyDeals = value;
+				if (value.Length > olds?.Length) {
+					Api.BroadcastGroupMessage (GetDailyDealInformation (null, item => !olds.Any (old => old.ID == item.ID)));
+				}
+			}
+
+		}
 		public WarframeStatusNightwave Nightwave;
 		[JsonIgnoreField]
 		public WarframeStatusSyndicateMission OstronsBounty;
@@ -67,6 +140,12 @@ namespace com.eruru.warframe {
 		};
 
 		WarframeStatusSyndicateMission[] _SyndicateMissions;
+		WarframeStatusNews[] _News;
+		WarframeStatusEvent[] _Events;
+		WarframeStatusFissure[] _Fissure;
+		WarframeStatusInvasion[] _Invasions;
+		WarframeStatusAlert[] _Alerts;
+		WarframeStatusDailyDeal[] _DailyDeals;
 
 		public static async Task Start () {
 			Timer.Elapsed += async (sender, e) => {
@@ -122,14 +201,14 @@ namespace com.eruru.warframe {
 			Timer.Add (dateTime);
 		}
 
-		public static StringBuilder GetNewsInformation (StringBuilder stringBuilder = null) {
+		public static StringBuilder GetNewsInformation (StringBuilder stringBuilder = null, Func<WarframeStatusNews, bool> itemFilter = null) {
 			Config.Read ((ref Config config) => {
 				Config tempConfig = config;
 				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
 					stringBuilder = GetInformation (
 						stringBuilder,
 						tempConfig.Commands.News[CommandIndexName.Default].Header, null,
-						tempConfig.Commands.News[CommandIndexName.Default].Item, instance.News, null, item => new object[] { item },
+						tempConfig.Commands.News[CommandIndexName.Default].Item, instance.News, itemFilter, item => new object[] { item },
 						tempConfig.Commands.News[CommandIndexName.Default].Footer, null
 					);
 				});
@@ -137,7 +216,7 @@ namespace com.eruru.warframe {
 			return stringBuilder;
 		}
 
-		public static StringBuilder GetEventInformation (StringBuilder stringBuilder = null) {
+		public static StringBuilder GetEventInformation (StringBuilder stringBuilder = null, Func<WarframeStatusEvent, bool> itemFilter = null) {
 			Config.Read ((ref Config config) => {
 				Config tempConfig = config;
 				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
@@ -148,7 +227,7 @@ namespace com.eruru.warframe {
 					stringBuilder = GetInformation (
 						stringBuilder,
 						tempConfig.Commands.Event[CommandIndexName.Default].Header, null,
-						tempConfig.Commands.Event[CommandIndexName.Default].Item, instance.Events, null, item => new object[] { item },
+						tempConfig.Commands.Event[CommandIndexName.Default].Item, instance.Events, itemFilter, item => new object[] { item },
 						tempConfig.Commands.Event[CommandIndexName.Default].Footer, null
 					);
 				});
@@ -156,7 +235,7 @@ namespace com.eruru.warframe {
 			return stringBuilder;
 		}
 
-		public static StringBuilder GetAlertInformation (StringBuilder stringBuilder = null) {
+		public static StringBuilder GetAlertInformation (StringBuilder stringBuilder = null, Func<WarframeStatusAlert, bool> itemFilter = null) {
 			Config.Read ((ref Config config) => {
 				Config tempConfig = config;
 				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
@@ -167,7 +246,7 @@ namespace com.eruru.warframe {
 					stringBuilder = GetInformation (
 						stringBuilder,
 						tempConfig.Commands.Alert[CommandIndexName.Default].Header, null,
-						tempConfig.Commands.Alert[CommandIndexName.Default].Item, instance.Alerts, null, item => new object[] { item, item.Mission },
+						tempConfig.Commands.Alert[CommandIndexName.Default].Item, instance.Alerts, itemFilter, item => new object[] { item, item.Mission },
 						tempConfig.Commands.Alert[CommandIndexName.Default].Footer, null
 					);
 				});
@@ -225,14 +304,14 @@ namespace com.eruru.warframe {
 			return stringBuilder;
 		}
 
-		public static StringBuilder GetFissureInformation (StringBuilder stringBuilder = null) {
+		public static StringBuilder GetFissureInformation (StringBuilder stringBuilder = null, Func<WarframeStatusFissure, bool> itemFilter = null) {
 			Config.Read ((ref Config config) => {
 				Config tempConfig = config;
 				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
 					stringBuilder = GetInformation (
 						stringBuilder,
 						tempConfig.Commands.Fissure[CommandIndexName.Default].Header, null,
-						tempConfig.Commands.Fissure[CommandIndexName.Default].Item, instance.Fissures, null, item => new object[] { item },
+						tempConfig.Commands.Fissure[CommandIndexName.Default].Item, instance.Fissures, itemFilter, item => new object[] { item },
 						tempConfig.Commands.Fissure[CommandIndexName.Default].Footer, null
 					);
 				});
@@ -240,14 +319,17 @@ namespace com.eruru.warframe {
 			return stringBuilder;
 		}
 
-		public static StringBuilder GetInvasionInformation (StringBuilder stringBuilder = null) {
+		public static StringBuilder GetInvasionInformation (StringBuilder stringBuilder = null, Func<WarframeStatusInvasion, bool> itemFilter = null) {
 			Config.Read ((ref Config config) => {
 				Config tempConfig = config;
 				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
+					if (itemFilter is null) {
+						itemFilter = item => !item.Completed;
+					}
 					stringBuilder = GetInformation (
 						stringBuilder,
 						tempConfig.Commands.Invasion[CommandIndexName.Default].Header, null,
-						tempConfig.Commands.Invasion[CommandIndexName.Default].Item, instance.Invasions, item => !item.Completed, item => new object[] { item },
+						tempConfig.Commands.Invasion[CommandIndexName.Default].Item, instance.Invasions, itemFilter, item => new object[] { item },
 						tempConfig.Commands.Invasion[CommandIndexName.Default].Footer, null
 					);
 				});
@@ -255,15 +337,15 @@ namespace com.eruru.warframe {
 			return stringBuilder;
 		}
 
-		public static StringBuilder GetVoidTraderInformation (StringBuilder stringBuilder = null) {
+		public static StringBuilder GetVoidTraderInformation (StringBuilder stringBuilder = null, Func<WarframeStatusInventory, bool> itemFilter = null) {
 			Config.Read ((ref Config config) => {
 				Config tempConfig = config;
 				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
-					if (instance.VoidTrader.Active) {
+					if (instance.VoidTrader.Inventory.Length > 0) {
 						stringBuilder = GetInformation (
 							stringBuilder,
 							tempConfig.Commands.VoidTrader[CommandIndexName.Default].Header, new object[] { instance.VoidTrader },
-							tempConfig.Commands.VoidTrader[CommandIndexName.Default].Item, instance.VoidTrader.Inventory, null, item => new object[] { item },
+							tempConfig.Commands.VoidTrader[CommandIndexName.Default].Item, instance.VoidTrader.Inventory, itemFilter, item => new object[] { item },
 							tempConfig.Commands.VoidTrader[CommandIndexName.Default].Footer, new object[] { instance.VoidTrader }
 						);
 						return;
@@ -314,14 +396,14 @@ namespace com.eruru.warframe {
 			return stringBuilder;
 		}
 
-		public static StringBuilder GetDailyDealInformation (StringBuilder stringBuilder = null) {
+		public static StringBuilder GetDailyDealInformation (StringBuilder stringBuilder = null, Func<WarframeStatusDailyDeal, bool> itemFilter = null) {
 			Config.Read ((ref Config config) => {
 				Config tempConfig = config;
 				ReaderWriterLockHelper.Read ((ref WarframeStatus instance) => {
 					stringBuilder = GetInformation (
 						stringBuilder,
 						tempConfig.Commands.DailyDeal[CommandIndexName.Default].Header, new object[] { instance.DailyDeals[0] },
-						tempConfig.Commands.DailyDeal[CommandIndexName.Default].Item, instance.DailyDeals, null, item => new object[] { item },
+						tempConfig.Commands.DailyDeal[CommandIndexName.Default].Item, instance.DailyDeals, itemFilter, item => new object[] { item },
 						tempConfig.Commands.DailyDeal[CommandIndexName.Default].Footer, new object[] { instance.DailyDeals[0] }
 					);
 				});

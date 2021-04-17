@@ -4,6 +4,7 @@ namespace com.eruru.warframe {
 
 	public class WarframeStatusInvasion {
 
+		public string ID;
 		[JsonField (typeof (NodeTranslator))]
 		public string Node;
 		public string AttackingFaction;

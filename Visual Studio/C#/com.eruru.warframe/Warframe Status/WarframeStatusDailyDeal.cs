@@ -6,6 +6,7 @@ namespace com.eruru.warframe {
 
 	public class WarframeStatusDailyDeal {
 
+		public string ID;
 		[JsonField (typeof (ItemTranslator))]
 		public string Item;
 		[JsonField (typeof (WarframeStatusUpdater))]
