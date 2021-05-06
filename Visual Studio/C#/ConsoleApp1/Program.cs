@@ -1,5 +1,5 @@
 ﻿using System;
-using Eruru.QQMini.PluginSDKDebugger;
+using Eruru.QQMiniDebugger;
 
 namespace ConsoleApp1 {
 
@@ -12,7 +12,7 @@ namespace ConsoleApp1 {
 #else
 			QMDebugger.IsDebugConfigure = false;
 #endif
-			QMDebugger.StartByRelative ("com.eruru.warframe");
+			QMDebugger.StartByPackageId ("com.eruru.warframe");
 		}
 
 	}

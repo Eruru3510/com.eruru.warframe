@@ -13,8 +13,8 @@ namespace com.eruru.warframe {
 		public long Master { get; set; }
 		public int StartNoticeTime { get; set; } = 6;
 		public int EndNoticeTime { get; set; } = 24;
-		public long MinimumNoticeInterval { get; set; } = Api.HoursToMillisecond (1);
-		public long MaximumNoticeInterval { get; set; } = Api.HoursToMillisecond (4);
+		public long MinimumNoticeInterval { get; set; } = Api.HoursToMillisecond (2);
+		public long MaximumNoticeInterval { get; set; } = Api.HoursToMillisecond (6);
 		public long MessageReplyTimeout {
 
 			get => _MessageReplyTimeout;
@@ -108,10 +108,10 @@ namespace com.eruru.warframe {
 		public List<long> Groups { get; set; } = new List<long> ();
 		public List<long> RelayGroups { get; set; } = new List<long> ();
 		public List<string> BountyItemBlacklistKeywords = new List<string> ();
+		public List<AuthorizeGroup> AuthorizeGroups = new List<AuthorizeGroup> ();
 		public CommandSet Commands = new CommandSet ();
 		public SortedDictionary<string, string> Translates { get; set; } = new SortedDictionary<string, string> ();
 		public SortedDictionary<string, string> WarframeMarketTranslates { get; set; } = new SortedDictionary<string, string> ();
-
 		static readonly ReaderWriterLockHelper<Config> ReaderWriterLockHelper = new ReaderWriterLockHelper<Config> (new Config ());
 		static readonly JsonConfig JsonConfig = new JsonConfig () {
 			Compress = false,
@@ -121,10 +121,10 @@ namespace com.eruru.warframe {
 		long _MessageReplyTimeout = Api.MinutesToMilliseconds (10);
 		long _WarframeStatusUpdateInterval = Api.MinutesToMilliseconds (1);
 		long _WarframeStatusUpdateRetryInterval = Api.MinutesToMilliseconds (1);
-		long _TranslateUpdateInterval = Api.MinutesToMilliseconds (30);
-		long _TranslateUpdateRetryInterval = Api.MinutesToMilliseconds (30);
-		long _WarframeMarketUpdateInterval = Api.MinutesToMilliseconds (30);
-		long _WarframeMarketUpdateRetryInterval = Api.MinutesToMilliseconds (30);
+		long _TranslateUpdateInterval = Api.MinutesToMilliseconds (60);
+		long _TranslateUpdateRetryInterval = Api.MinutesToMilliseconds (60);
+		long _WarframeMarketUpdateInterval = Api.MinutesToMilliseconds (60);
+		long _WarframeMarketUpdateRetryInterval = Api.MinutesToMilliseconds (60);
 
 		public static void Load () {
 			QMHelperApi.Debug ("开始加载配置");

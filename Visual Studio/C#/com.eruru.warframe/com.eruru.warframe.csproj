@@ -89,6 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Api.cs" />
+    <Compile Include="AuthorizeGroup.cs" />
     <Compile Include="BroadcastMessageType.cs" />
     <Compile Include="Catch Message System\CatchMessage.cs" />
     <Compile Include="Catch Message System\CatchMessageSystem.cs" />

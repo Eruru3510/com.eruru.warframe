@@ -105,6 +105,21 @@ namespace com.eruru.warframe {
 			});
 		}
 
+		public static void Renewal (QMMessage<MessagePermissionLevel> message, long group, long days) {
+			Config.Write ((ref Config config) => {
+				AuthorizeGroup authorizeGroup = config.AuthorizeGroups.Find (value => value.Id == group);
+				if (authorizeGroup is null) {
+					authorizeGroup = new AuthorizeGroup ();
+					config.AuthorizeGroups.Add (authorizeGroup);
+				}
+				if (authorizeGroup.IsExpiry) {
+					authorizeGroup.Expiry = DateTime.Now;
+				}
+				authorizeGroup.Expiry.AddDays (days);
+				message.Reply ($"群{group}续费{days}天成功，过期时间：{authorizeGroup.Expiry}");
+			});
+		}
+
 		public static void RemoveRelayGroup (QMMessage<MessagePermissionLevel> message) {
 			RemoveRelayGroupByGroup (message, message.Group);
 		}

@@ -146,25 +146,30 @@ namespace com.eruru.warframe {
 			List<QMMessage> messages = new List<QMMessage> ();
 			Config.Read ((ref Config config) => {
 				ReadOnlyCollection<QQ> robotQQs = QMApiV2.GetFrameAllOnlineQQ ();
-				foreach (long robotQQ in robotQQs) {
-					foreach (long group in config.Groups) {
-						switch (messageType) {
-							case BroadcastMessageType.Text: {
-								Message message = QMMessage.Send (QMMessageType.Group, robotQQ, group, default, stringBuilder);
-								messages.Add (new QMMessage (QMMessageType.Group, robotQQ, group, default, (int)message.Id, message.Number, message.Text));
-								break;
+				foreach (AuthorizeGroup authorizeGroup in config.AuthorizeGroups) {
+					if (authorizeGroup.IsExpiry) {
+						continue;
+					}
+					switch (messageType) {
+						case BroadcastMessageType.Text: {
+							foreach (long robotQQ in robotQQs) {
+								Message message = QMMessage.Send (QMMessageType.Group, robotQQ, authorizeGroup.Id, default, stringBuilder);
+								messages.Add (new QMMessage (QMMessageType.Group, robotQQ, authorizeGroup.Id, default, (int)message.Id, message.Number, message.Text));
 							}
-							case BroadcastMessageType.Json: {
-								Message message = QMMessage.Send (QMMessageType.GroupJson, robotQQ, group, default, stringBuilder);
+							break;
+						}
+						case BroadcastMessageType.Json: {
+							foreach (long robotQQ in robotQQs) {
+								Message message = QMMessage.Send (QMMessageType.GroupJson, robotQQ, authorizeGroup.Id, default, stringBuilder);
 								if (message is null) {
 									break;
 								}
-								messages.Add (new QMMessage (QMMessageType.GroupJson, robotQQ, group, default, (int)message.Id, message.Number, message.Text));
-								break;
+								messages.Add (new QMMessage (QMMessageType.GroupJson, robotQQ, authorizeGroup.Id, default, (int)message.Id, message.Number, message.Text));
 							}
-							default:
-								throw new NotImplementedException ();
+							break;
 						}
+						default:
+							throw new NotImplementedException ();
 					}
 				}
 			});
@@ -177,6 +182,18 @@ namespace com.eruru.warframe {
 				can = DateTime.Now.Hour >= config.StartNoticeTime && DateTime.Now.Hour < config.EndNoticeTime;
 			});
 			return can;
+		}
+
+		public static bool IsAuthorizedGroup (long group) {
+			bool isAuthorizedGroup = false;
+			Config.Read ((ref Config config) => {
+				AuthorizeGroup authorizeGroup = config.AuthorizeGroups.Find (value => value.Id == group);
+				if (authorizeGroup?.IsExpiry ?? true) {
+					return;
+				}
+				isAuthorizedGroup = true;
+			});
+			return isAuthorizedGroup;
 		}
 
 		public static T ShallowCopy<T> (T instance) where T : class {

@@ -127,6 +127,7 @@ namespace com.eruru.warframe {
 				TextCommandSystem.Add<Commands> (nameof (Commands.AddRelayGroupByGroup), "添加转发群", "<群号>", MessagePermissionLevel.Master, nameof (Commands.AddRelayGroupByGroup));
 				TextCommandSystem.Add<Commands> (nameof (Commands.RemoveRelayGroup), "删除转发群", MessagePermissionLevel.Master, nameof (Commands.RemoveRelayGroup));
 				TextCommandSystem.Add<Commands> (nameof (Commands.RemoveRelayGroupByGroup), "删除转发群", "<群号>", MessagePermissionLevel.Master, nameof (Commands.RemoveRelayGroupByGroup));
+				TextCommandSystem.Add<Commands> (nameof (Commands.Renewal), "续费", "<群号> <天数>", MessagePermissionLevel.Master, nameof (Commands.Renewal));
 				TextCommandSystem.Add<Commands> (nameof (Commands.AddTranslate), "添加翻译", "<英文> <中文>", MessagePermissionLevel.Master, nameof (Commands.AddTranslate));
 				TextCommandSystem.Add<Commands> (nameof (Commands.RemoveTranslate), "删除翻译", "<英文>", MessagePermissionLevel.Master, nameof (Commands.RemoveTranslate));
 				TextCommandSystem.Add<Commands> (nameof (Commands.AddWarframeMarketTranslate), "添加WM翻译", "<中文> <英文>", MessagePermissionLevel.Master, nameof (Commands.AddWarframeMarketTranslate));
@@ -220,7 +221,7 @@ namespace com.eruru.warframe {
 			Task.Run (() => {
 				Config.Read ((ref Config config) => {
 					if (message.Group > 0 && config.RelayGroups.Contains (message.Group)) {
-						Match match = Regex.Match (message.Text, @"(^{.*}$)");
+						Match match = Regex.Match (message.Text, @"(^{.*})");
 						if (match.Success) {
 							Api.BroadcastGroupMessage (match.Groups[1].Value, BroadcastMessageType.Json);
 						} else {
@@ -248,9 +249,12 @@ namespace com.eruru.warframe {
 						}
 					}
 					if (messagePermissionLevel < MessagePermissionLevel.Master) {
-						if (message.Group > 0 && !config.Groups.Contains (message.Group)) {
+						if (!Api.IsAuthorizedGroup (message.Group)) {
 							return;
 						}
+						/*if (message.Group > 0 && !config.Groups.Contains (message.Group)) {
+							return;
+						}*/
 					}
 					message.Tag = messagePermissionLevel;
 					try {

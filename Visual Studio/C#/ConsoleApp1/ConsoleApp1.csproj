@@ -35,6 +35,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Eruru.QQMiniDebugger">
+      <HintPath>..\..\..\..\Eruru.QQMiniDebugger\Visual Studio\C#\Eruru.QQMiniDebugger\bin\x86\Release\net45\Eruru.QQMiniDebugger.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -52,11 +55,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Eruru.QQMini.PluginSDKDebugger">
-      <Version>1.0.0.3</Version>
-    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

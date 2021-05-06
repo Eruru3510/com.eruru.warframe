@@ -50,6 +50,7 @@ namespace com.eruru.warframe {
 						break;
 					case UpdateType.Network:
 						type = string.Empty;
+						Config.Save ();
 						break;
 					case UpdateType.Cache:
 						type = "（缓存）";
